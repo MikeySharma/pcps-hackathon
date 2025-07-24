@@ -70,7 +70,9 @@ export default function AIQuizPage() {
       // Check if there's a stored threadId from previous session
       const storedThreadId = localStorage.getItem("quiz_thread_id")
       if (storedThreadId) {
-        const response = await fetch(`/api/ai-quiz/progress/${storedThreadId}`)
+        const response = await fetch(`http://localhost:5000/api/ai-quiz/progress/${storedThreadId}`)
+        console.log("Checking incomplete quiz with threadId:", storedThreadId);
+        console.log(response);
         if (response.ok) {
           const data = await response.json()
           if (data.success && !data.metadata.isCompleted) {
@@ -90,10 +92,11 @@ export default function AIQuizPage() {
     setError("")
 
     try {
-      const response = await fetch("/api/ai-quiz/start", {
+      const response = await fetch("http://localhost:5000/api/ai-quiz/start", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
         },
       })
 
@@ -130,17 +133,21 @@ export default function AIQuizPage() {
     setError("")
 
     try {
-      const response = await fetch("/api/ai-quiz/submit", {
+      const response = await fetch("http://localhost:5000/api/ai-quiz/submit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           threadId: metadata.threadId,
           answer: selectedAnswer,
         }),
       })
-
+      console.log("Submitting answer:", {
+        threadId: metadata.threadId,
+        answer: selectedAnswer,
+      })
       if (!response.ok) {
         throw new Error("Failed to submit answer")
       }
@@ -148,7 +155,12 @@ export default function AIQuizPage() {
       const data: ApiResponse = await response.json()
 
       if (data.success) {
-        setMetadata(data.metadata)
+        setMetadata(() => ({
+          ...metadata,
+          currentQuestion: data.metadata.currentQuestion,
+          totalQuestions: data.metadata.totalQuestions,
+          completionPercentage: data.metadata.completionPercentage,
+        }))
 
         if (data.metadata.completionPercentage === 100) {
           // Quiz completed - show results
@@ -255,13 +267,12 @@ export default function AIQuizPage() {
                       <div>
                         <h4 className="font-medium text-gray-900 mb-1">Job Market:</h4>
                         <span
-                          className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                            career.jobMarket === "high"
+                          className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${career.jobMarket === "high"
                               ? "bg-green-100 text-green-800"
                               : career.jobMarket === "medium"
                                 ? "bg-yellow-100 text-yellow-800"
                                 : "bg-red-100 text-red-800"
-                          }`}
+                            }`}
                         >
                           {career.jobMarket.charAt(0).toUpperCase() + career.jobMarket.slice(1)} Demand
                         </span>
