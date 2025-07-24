@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Menu, X, Bot, User, Briefcase, BookOpen, FileText, HelpCircle, Zap } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -19,7 +19,14 @@ export function Navbar() {
     { href: "/profile", label: "Profile", icon: User },
   ];
 
-  const CurrUser = localStorage.getItem("userData");
+  const [currUser, setCurrUser] = useState(null)
+
+  useEffect(() => {
+    const userData = localStorage.getItem("userData")
+    if (userData) {
+      setCurrUser(JSON.parse(userData))
+    }
+  }, [])
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -45,7 +52,7 @@ export function Navbar() {
               </Link>
             ))}
             {
-              !CurrUser &&
+              !currUser &&
               <Button className="bg-gray-800 hover:bg-gray-700"><Link href="/register">Get Started</Link></Button>
             }
           </div>

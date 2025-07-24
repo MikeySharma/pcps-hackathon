@@ -2,14 +2,21 @@
 import Link from "next/link"
 import { Bot, Mail, Phone } from "lucide-react"
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation"
 
 export function Footer() {
-  const [isChatPage, setIsChatPage] = useState(false);
+  const [show, setShow] = useState<boolean>(false)
+
+  const params = usePathname().replace("/", "")
+
   useEffect(() => {
-    if (window.location.pathname === "/chat") setIsChatPage(true)
-  }, [])
+    setShow(params.includes("chat"))
+  }, [params])
+
+  if (show) return null
+
   return (
-    <footer className={`bg-gray-50 border-t border-gray-200 ${isChatPage ? "hidden" : ""}`}>
+    <footer className={`bg-gray-50 border-t border-gray-200 `}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
