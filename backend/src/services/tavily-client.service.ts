@@ -21,6 +21,7 @@ export class TavilyClient {
         max_results?: number;
         include_domains?: string[];
         exclude_domains?: string[];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }): Promise<any> {
         const response = await axios.post(`${this.baseUrl}/search`, params, {
             headers: {

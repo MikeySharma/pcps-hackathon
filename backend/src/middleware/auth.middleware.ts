@@ -21,6 +21,42 @@ declare module "express" {
         };
     }
 }
+/**
+ * Optional Authentication Middleware
+ * 1. Tries to extract JWT token from headers if present
+ * 2. If token exists and is valid, attaches user info to request
+ * 3. Proceeds to next middleware whether authenticated or not
+ */
+export const optionalAuthenticate = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        // Token extraction from Authorization header if present
+        const token = req.headers.authorization?.split(' ')[1];
+
+        if (token) {
+            // Verify token using AuthService if token exists
+            const user = await AuthService.verifyToken(token);
+
+            if (user) {
+                // Attach user to request if token is valid
+                req.authUser = {
+                    id: user._id,
+                    email: user.email,
+                    role: user.role
+                };
+            }
+            // If token is invalid, we just proceed without authUser
+        }
+
+        // Always proceed to next middleware
+        next();
+    } catch (error) {
+        console.error('Optional authentication error:', error);
+
+        // Even if there's an error, we proceed to next middleware
+        // since this is optional authentication
+        next();
+    }
+};
 
 /**
  * Authentication Middleware

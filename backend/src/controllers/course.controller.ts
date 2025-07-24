@@ -6,16 +6,13 @@ interface CourseResponse {
     id: ObjectId;
     title: string;
     description: string;
+    shortDescription: string;
     provider: string;
     url: string;
-    imageUrl?: string;
     categories: string[];
-    rating?: number;
-    duration?: string;
     isFree: boolean;
-    price?: string;
+    imageUrl?: string;
     isBookmarked?: boolean;
-    progress?: number;
 }
 
 interface ApiResponse<T> {
@@ -25,6 +22,29 @@ interface ApiResponse<T> {
 }
 
 export class CourseController {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private static async enhanceCourseResponse(course: any, userId?: ObjectId): Promise<CourseResponse> {
+        const response: CourseResponse = {
+            id: course._id,
+            title: course.title,
+            description: course.description,
+            shortDescription: course.shortDescription,
+            provider: course.provider,
+            url: course.url,
+            categories: course.categories,
+            isFree: course.isFree,
+            imageUrl: course.imageUrl
+        };
+
+        if (userId) {
+            const userCourses = await CourseService.getUserCourses(userId);
+            const userCourse = userCourses.find(uc => uc.course._id.equals(course._id));
+            response.isBookmarked = userCourse?.userCourse.isBookmarked || false;
+        }
+
+        return response;
+    }
+
     static async searchCourses(req: Request, res: Response<ApiResponse<CourseResponse[]>>): Promise<Response> {
         try {
             const { query } = req.query;
@@ -38,34 +58,8 @@ export class CourseController {
             const courses = await CourseService.searchCourses(query);
             const userId = req.authUser?.id;
 
-            // Enhance with user-specific data if logged in
             const enhancedCourses = await Promise.all(
-                courses.map(async course => {
-                    const response: CourseResponse = {
-                        id: course._id,
-                        title: course.title,
-                        description: course.description,
-                        provider: course.provider,
-                        url: course.url,
-                        imageUrl: course.imageUrl,
-                        categories: course.categories,
-                        rating: course.rating,
-                        duration: course.duration,
-                        isFree: course.isFree,
-                        price: course.price
-                    };
-
-                    if (userId) {
-                        const userCourses = await CourseService.getUserCourses(userId);
-                        const userCourse = userCourses.find(uc => uc.course._id.equals(course._id));
-                        if (userCourse) {
-                            response.isBookmarked = userCourse.userCourse.isBookmarked;
-                            response.progress = userCourse.userCourse.progress;
-                        }
-                    }
-
-                    return response;
-                })
+                courses.map(course => CourseController.enhanceCourseResponse(course, userId))
             );
 
             return res.json({
@@ -94,28 +88,7 @@ export class CourseController {
                 });
             }
 
-            const response: CourseResponse = {
-                id: course._id,
-                title: course.title,
-                description: course.description,
-                provider: course.provider,
-                url: course.url,
-                imageUrl: course.imageUrl,
-                categories: course.categories,
-                rating: course.rating,
-                duration: course.duration,
-                isFree: course.isFree,
-                price: course.price
-            };
-
-            if (userId) {
-                const userCourses = await CourseService.getUserCourses(userId);
-                const userCourse = userCourses.find(uc => uc.course._id.equals(course._id));
-                if (userCourse) {
-                    response.isBookmarked = userCourse.userCourse.isBookmarked;
-                    response.progress = userCourse.userCourse.progress;
-                }
-            }
+            const response = await CourseController.enhanceCourseResponse(course, userId);
 
             return res.json({
                 success: true,
@@ -144,16 +117,13 @@ export class CourseController {
                 id: course._id,
                 title: course.title,
                 description: course.description,
+                shortDescription: course.shortDescription,
                 provider: course.provider,
                 url: course.url,
                 imageUrl: course.imageUrl,
                 categories: course.categories,
-                rating: course.rating,
-                duration: course.duration,
                 isFree: course.isFree,
-                price: course.price,
-                isBookmarked: userCourse.isBookmarked,
-                progress: userCourse.progress
+                isBookmarked: userCourse.isBookmarked
             }));
 
             return res.json({
@@ -181,10 +151,17 @@ export class CourseController {
             const { courseId } = req.params;
             const { bookmark } = req.body;
 
+            if (typeof bookmark !== 'boolean') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Bookmark status must be a boolean'
+                });
+            }
+
             await CourseService.bookmarkCourse(
                 req.authUser.id,
                 new ObjectId(courseId),
-                bookmark === true
+                bookmark
             );
 
             return res.json({
@@ -200,64 +177,18 @@ export class CourseController {
         }
     }
 
-    static async updateProgress(req: Request, res: Response<ApiResponse<{ progress: number }>>): Promise<Response> {
-        if (!req.authUser) {
-            return res.status(401).json({
-                success: false,
-                message: 'Not authenticated'
-            });
-        }
-
+    static async getFeaturedCourses(req: Request, res: Response<ApiResponse<CourseResponse[]>>): Promise<Response> {
         try {
-            const { courseId } = req.params;
-            const { progress } = req.body;
+            const courses = await CourseService.getFeaturedCourses();
+            const userId = req.authUser?.id;
 
-            if (typeof progress !== 'number' || progress < 0 || progress > 100) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Progress must be a number between 0 and 100'
-                });
-            }
-
-            await CourseService.updateCourseProgress(
-                req.authUser.id,
-                new ObjectId(courseId),
-                progress
+            const enhancedCourses = await Promise.all(
+                courses.map(course => CourseController.enhanceCourseResponse(course, userId))
             );
 
             return res.json({
                 success: true,
-                data: { progress }
-            });
-        } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : 'Failed to update progress';
-            return res.status(500).json({
-                success: false,
-                message
-            });
-        }
-    }
-
-    static async getFeaturedCourses(req: Request, res: Response<ApiResponse<CourseResponse[]>>): Promise<Response> {
-        try {
-            const courses = await CourseService.getFeaturedCourses();
-            const response = courses.map(course => ({
-                id: course._id,
-                title: course.title,
-                description: course.description,
-                provider: course.provider,
-                url: course.url,
-                imageUrl: course.imageUrl,
-                categories: course.categories,
-                rating: course.rating,
-                duration: course.duration,
-                isFree: course.isFree,
-                price: course.price
-            }));
-
-            return res.json({
-                success: true,
-                data: response
+                data: enhancedCourses
             });
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : 'Failed to get featured courses';

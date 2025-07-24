@@ -8,7 +8,7 @@ export class Course {
 
     @Column()
     @Index({ unique: true })
-    tavilyId!: string; // Changed from googleId to tavilyId
+    tavilyId!: string;
 
     @Column()
     @Index({ fulltext: true })
@@ -18,48 +18,30 @@ export class Course {
     @Index({ fulltext: true })
     description!: string;
 
+    @Column({ type: 'text' })
+    shortDescription!: string;
+
     @Column('simple-array')
     @Index({ fulltext: true })
     categories!: string[];
 
     @Column()
-    provider!: string; // e.g., "Coursera", "Udemy", "edX", "YouTube"
-
-    @Column()
-    url!: string;
+    provider!: string;
 
     @Column({ nullable: true })
     imageUrl?: string;
 
-    @Column({ type: 'float', nullable: true })
-    rating?: number;
-
-    @Column({ nullable: true })
-    duration?: string; // e.g., "10 weeks", "20 hours", "1:23:45" for videos
+    @Column()
+    url!: string;
 
     @Column({ default: false })
     isFree!: boolean;
 
     @Column({ default: false })
-    isVideo!: boolean; // New field to distinguish video courses
+    isVideo!: boolean;
 
     @Column({ nullable: true })
-    price?: string;
-
-    @Column({ type: 'simple-json', nullable: true })
-    instructors?: Array<{
-        name: string;
-        imageUrl?: string;
-    }>;
-
-    @Column({ nullable: true })
-    channelName?: string; // For YouTube videos
-
-    @Column({ nullable: true })
-    viewCount?: number; // For YouTube videos
-
-    @Column({ nullable: true })
-    publishedAt?: Date; // For YouTube videos
+    channelName?: string;
 
     @CreateDateColumn()
     createdAt!: Date;
@@ -67,12 +49,12 @@ export class Course {
     @UpdateDateColumn()
     updatedAt!: Date;
 
-    @Column({ default: false })
-    isFeatured!: boolean;
-
     @Column({ default: 0 })
     popularityScore!: number;
 
+    @Column({ default: 0 })
+    tavilyScore!: number; // New field for Tavily's relevance score
+
     @Column({ type: 'simple-array', nullable: true })
-    tags?: string[]; // Additional metadata for better search
+    tags?: string[];
 }

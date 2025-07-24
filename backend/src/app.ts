@@ -30,6 +30,8 @@ app.use('/api/ai-quiz', aiQuizRoutes);
 app.use("/api/ai-chatbot", aiChatbotRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/courses", courseRoutes);
+
+
 // Error handling (must be after routes)
 app.use(errorHandler);
 

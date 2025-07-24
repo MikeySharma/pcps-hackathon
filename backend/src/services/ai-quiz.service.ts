@@ -109,15 +109,15 @@ async function generateNextQuestion(
             previousAnswers.forEach((ans, idx) => {
                 prompt += `\nQ${idx + 1}: ${previousQuestions[idx].question}\nA: ${ans.answer}`;
             });
-            
+
             // Detect if user has shown preference for global or Nepal opportunities
             const globalKeywords = ['global', 'international', 'remote', 'abroad', 'overseas'];
             const nepalKeywords = ['nepal', 'local', 'kathmandu', 'within country'];
-            
+
             const answersText = previousAnswers.map(a => a.answer.toLowerCase()).join(' ');
             const isGlobalPreferred = globalKeywords.some(kw => answersText.includes(kw));
             const isNepalPreferred = nepalKeywords.some(kw => answersText.includes(kw));
-            
+
             if (isGlobalPreferred && !isNepalPreferred) {
                 prompt += `\n\nThe user seems interested in global career opportunities.`;
             } else if (isNepalPreferred && !isGlobalPreferred) {
@@ -174,14 +174,14 @@ async function generateCareerSuggestions(
 
         // Analyze answers for location preference
         const allAnswers = answers.map(a => a.answer.toLowerCase()).join(' ');
-        const isGlobalPreferred = allAnswers.includes('global') || allAnswers.includes('international') || 
-                                allAnswers.includes('remote') || allAnswers.includes('abroad');
-        const isNepalPreferred = allAnswers.includes('nepal') || allAnswers.includes('local') || 
-                                allAnswers.includes('kathmandu') || allAnswers.includes('within country');
+        const isGlobalPreferred = allAnswers.includes('global') || allAnswers.includes('international') ||
+            allAnswers.includes('remote') || allAnswers.includes('abroad');
+        const isNepalPreferred = allAnswers.includes('nepal') || allAnswers.includes('local') ||
+            allAnswers.includes('kathmandu') || allAnswers.includes('within country');
 
         const locationContext = isGlobalPreferred && !isNepalPreferred ? "Focus more on global opportunities but include some Nepal options if relevant." :
-                              !isGlobalPreferred && isNepalPreferred ? "Focus exclusively on Nepal's job market." :
-                              "Provide a mix of both Nepal-specific and global career opportunities.";
+            !isGlobalPreferred && isNepalPreferred ? "Focus exclusively on Nepal's job market." :
+                "Provide a mix of both Nepal-specific and global career opportunities.";
 
         const prompt = `Act as a professional career counselor. Analyze these career assessment responses and suggest 3-5 career paths:
 
@@ -249,6 +249,7 @@ async function generateCareerSuggestions(
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractAndParseJSON(text: string): any {
     const jsonPattern = /```json\n?([\s\S]*?)\n?```|({[\s\S]*})|(\[[\s\S]*\])/;
     const match = text.match(jsonPattern);

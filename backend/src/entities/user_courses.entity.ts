@@ -18,9 +18,6 @@ export class UserCourse {
     isBookmarked!: boolean;
 
     @Column({ nullable: true })
-    progress?: number; // 0-100
-
-    @Column({ nullable: true })
     lastAccessed?: Date;
 
     @Column({ nullable: true })

@@ -88,7 +88,7 @@ export const aiChatbotController = {
             // Get memory for this thread to check if it exists
             const memory = getMemoryForThread(threadId);
             const history = await memory.chatHistory.getMessages();
-            
+
             // Trim memory if needed
             await trimMemory(threadId);
 
@@ -141,7 +141,7 @@ export const aiChatbotController = {
             const messages = await memory.chatHistory.getMessages();
 
             // Format messages for client
-            const formattedMessages = messages.map(msg => {
+            const formattedMessages = messages.map((msg: { _getType: () => unknown; content: unknown; }) => {
                 return {
                     type: msg._getType(),
                     content: msg.content,
