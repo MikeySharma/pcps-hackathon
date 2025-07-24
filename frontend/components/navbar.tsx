@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Bot, User, Briefcase, BookOpen, FileText, HelpCircle, Zap } from "lucide-react"
+import { Menu, X, Bot, User, Briefcase, BookOpen, FileText, HelpCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 type User = {
@@ -20,7 +20,11 @@ export function Navbar() {
     { href: "/resume/classic", label: "Resume", icon: FileText },
     { href: "/courses", label: "Courses", icon: BookOpen },
     { href: "/jobs", label: "Jobs", icon: Briefcase },
+<<<<<<< HEAD
     { href: "/remotejobs", label: "Gig Jobs", icon: Zap },
+=======
+    { href: "/profile", label: "Profile", icon: User },
+>>>>>>> 94dd72f8dc248f2e2d55badbe6725dbb6912d05c
   ];
 
 const [currUser, setCurrUser] = useState<User | null>(null)

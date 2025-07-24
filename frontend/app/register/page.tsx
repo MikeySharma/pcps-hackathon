@@ -1,77 +1,64 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Bot, Eye, EyeOff, Mail, Lock, User, MapPin } from "lucide-react"
-import Link from "next/link"
-import { motion } from "framer-motion"
-import { useRouter } from "next/navigation"
-import { storage } from "@/lib/storage"
-import axios from "@/lib/axios"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Bot, Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import axios from "@/lib/axios";
+import { toast } from "sonner";
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    location: "",
-    role: "",
-    phoneNumber: ""
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [agreeToTerms, setAgreeToTerms] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!agreeToTerms) {
-      alert("Please agree to the terms and conditions")
-      return
+      toast.error("Please agree to the terms and conditions");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
       const response = await axios.post("/api/auth/register", {
         email: formData.email,
         name: formData.name,
-        location: formData.location,
-        role: formData.role,
         password: formData.password,
-        phoneNumber: formData.phoneNumber
-      })
-
-      // Store user data locally if needed
-      storage.setUser({
-        email: response.data.email,
-        name: response.data.name,
-        location: response.data.location,
-        role: response.data.role,
-        registrationTime: new Date().toISOString(),
-      })
-
-      router.push("/login")
+      });
+      if (!response.data.error) {
+        toast.success("Registration successful! Redirecting to login...");
+        router.push("/login");
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error("Registration error:", error)
-      alert(error.response?.data?.message || "Something went wrong")
+      console.error("Registration error:", error);
+      alert(error.response?.data?.message || "Something went wrong");
     } finally {
       setTimeout(() => {
-        setIsLoading(false)
+        setIsLoading(false);
       }, 1500);
     }
-  }
+  };
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <motion.div
@@ -81,19 +68,22 @@ export default function RegisterPage() {
         className="max-w-md w-full space-y-8"
       >
         <div className="text-center">
-          <Link href="/" className="flex items-center justify-center space-x-2 mb-6">
+          <Link
+            href="/"
+            className="flex items-center justify-center space-x-2 mb-6"
+          >
             <Bot className="h-10 w-10 text-gray-800" />
             <span className="text-2xl font-bold text-gray-800">KaamSathi</span>
           </Link>
-          <h2 className="text-3xl font-bold text-gray-900">Create your account</h2>
-          <p className="mt-2 text-gray-600">Join KaamSathi to start your career journey</p>
+          <h2 className="text-3xl font-bold text-gray-900">
+            Create your account
+          </h2>
+          <p className="mt-2 text-gray-600">
+            Join KaamSathi to start your career journey
+          </p>
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Sign Up</CardTitle>
-            <CardDescription>Create your account to get started</CardDescription>
-          </CardHeader>
           <CardContent>
             <form onSubmit={handleRegister} className="space-y-6">
               <div className="space-y-4">
@@ -105,7 +95,9 @@ export default function RegisterPage() {
                       id="name"
                       type="text"
                       value={formData.name}
-                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
                       placeholder="Enter your full name"
                       className="pl-10"
                       required
@@ -121,56 +113,14 @@ export default function RegisterPage() {
                       id="email"
                       type="email"
                       value={formData.email}
-                      onChange={(e) => handleInputChange("email", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("email", e.target.value)
+                      }
                       placeholder="Enter your email"
                       className="pl-10"
                       required
                     />
                   </div>
-                </div>
-                <div>
-                  <Label htmlFor="phoneNumber">Phone Number</Label>
-                  <div className="relative mt-1">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      id="email"
-                      type="tel"
-                      value={formData.phoneNumber}
-                      onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
-                      placeholder="Enter your Phone Number"
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="location">Location</Label>
-                  <div className="relative mt-1">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      id="location"
-                      type="text"
-                      value={formData.location}
-                      onChange={(e) => handleInputChange("location", e.target.value)}
-                      placeholder="e.g., Kathmandu, Nepal"
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="role">I am a</Label>
-                  <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value)}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select your role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 <div>
@@ -181,7 +131,9 @@ export default function RegisterPage() {
                       id="password"
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
-                      onChange={(e) => handleInputChange("password", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("password", e.target.value)
+                      }
                       placeholder="Create a password"
                       className="pl-10 pr-10"
                       required
@@ -191,33 +143,50 @@ export default function RegisterPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
-
-
               </div>
 
               <div className="flex items-start space-x-2">
                 <Checkbox
                   id="terms"
                   checked={agreeToTerms}
-                  onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    setAgreeToTerms(checked as boolean)
+                  }
                 />
-                <Label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed">
+                <Label
+                  htmlFor="terms"
+                  className="text-sm text-gray-600 leading-relaxed"
+                >
                   I agree to the{" "}
-                  <Link href="/terms" className="text-gray-800 hover:text-gray-600 underline">
+                  <Link
+                    href="/terms"
+                    className="text-gray-800 hover:text-gray-600 underline"
+                  >
                     Terms of Service
                   </Link>{" "}
                   and{" "}
-                  <Link href="/privacy" className="text-gray-800 hover:text-gray-600 underline">
+                  <Link
+                    href="/privacy"
+                    className="text-gray-800 hover:text-gray-600 underline"
+                  >
                     Privacy Policy
                   </Link>
                 </Label>
               </div>
 
-              <Button type="submit" disabled={isLoading} className="w-full bg-gray-800 hover:bg-gray-700">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-gray-800 cursor-pointer hover:bg-gray-700"
+              >
                 {isLoading ? (
                   <div className="flex items-center space-x-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -235,7 +204,9 @@ export default function RegisterPage() {
                   <div className="w-full border-t border-gray-300" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or sign up with</span>
+                  <span className="px-2 bg-white text-gray-500">
+                    Or sign up with
+                  </span>
                 </div>
               </div>
 
@@ -262,7 +233,11 @@ export default function RegisterPage() {
                   Google
                 </Button>
                 <Button variant="outline" className="bg-transparent">
-                  <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="h-4 w-4 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                   </svg>
                   Facebook
@@ -273,7 +248,10 @@ export default function RegisterPage() {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Already have an account?{" "}
-                <Link href="/login" className="font-medium text-gray-800 hover:text-gray-600">
+                <Link
+                  href="/login"
+                  className="font-medium text-gray-800 hover:text-gray-600"
+                >
                   Sign in
                 </Link>
               </p>
@@ -282,5 +260,5 @@ export default function RegisterPage() {
         </Card>
       </motion.div>
     </div>
-  )
+  );
 }

@@ -13,7 +13,10 @@ import {
   Sparkles,
   AlertCircle,
   RotateCcw,
+  FileText,
+  BookOpen,
 } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
@@ -442,7 +445,7 @@ export default function AIQuizPage() {
     );
   }
 
-  // Results page
+  // Results page - Updated version
   if (isCompleted && careerSuggestions.length > 0) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
@@ -451,7 +454,7 @@ export default function AIQuizPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-8"
+            className="text-center mb-12"
           >
             <div className="flex items-center justify-center mb-4">
               <CheckCircle className="h-12 w-12 text-green-500" />
@@ -459,106 +462,167 @@ export default function AIQuizPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Your AI-Generated Career Recommendations
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 max-w-2xl mx-auto">
               Based on your responses, here are personalized career matches
+              ranked by compatibility with your skills and preferences
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mb-12">
             {careerSuggestions.map((career, index) => (
               <motion.div
-                key={career.title}
+                key={index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
               >
-                <Card className="h-full hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
-                      <CardTitle className="text-lg">{career.title}</CardTitle>
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-medium">
-                        {career.fitScore}% Match
-                      </span>
+                <Card className="h-full hover:shadow-lg cursor-pointer transition-shadow duration-300 border border-gray-200">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-xl">
+                          {career.title}
+                        </CardTitle>
+                        <p className="text-gray-600 text-sm mt-1">
+                          {career.description}
+                        </p>
+                      </div>
+                      <div className="relative w-36 h-20 ml-4">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={[
+                                { name: "Filled", value: career.fitScore },
+                                {
+                                  name: "Remaining",
+                                  value: 100 - career.fitScore,
+                                },
+                              ]}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={20}
+                              outerRadius={30}
+                              paddingAngle={0}
+                              dataKey="value"
+                            >
+                              <Cell key="filled" fill="#3b82f6" />
+                              <Cell key="remaining" fill="#e5e7eb" />
+                            </Pie>
+                            <text
+                              x="50%"
+                              y="50%"
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                              className="text-sm font-bold"
+                            >
+                              {career.fitScore}%
+                            </text>
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
                     </div>
-                    <p className="text-gray-600 text-sm">
-                      {career.description}
-                    </p>
                   </CardHeader>
 
-                  <CardContent>
+                  <CardContent className="pt-0">
                     <div className="space-y-4">
-                      {/* Pros */}
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-1">
-                          Pros:
-                        </h4>
-                        <ul className="text-sm text-gray-600 list-disc list-inside">
-                          {career.pros.map((pro, i) => (
-                            <li key={i}>{pro}</li>
-                          ))}
-                        </ul>
+                      {/* Salary and Job Market */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <h4 className="text-xs font-semibold text-blue-800 uppercase tracking-wider mb-1">
+                            Salary Range
+                          </h4>
+                          <p className="text-sm font-medium text-gray-900">
+                            {career.salaryRange}
+                          </p>
+                        </div>
+                        <div
+                          className={`p-3 rounded-lg ${
+                            career.jobMarket === "high"
+                              ? "bg-green-50"
+                              : career.jobMarket === "medium"
+                              ? "bg-yellow-50"
+                              : "bg-red-50"
+                          }`}
+                        >
+                          <h4 className="text-xs font-semibold uppercase tracking-wider mb-1">
+                            Job Market
+                          </h4>
+                          <p
+                            className={`text-sm font-medium ${
+                              career.jobMarket === "high"
+                                ? "text-green-800"
+                                : career.jobMarket === "medium"
+                                ? "text-yellow-800"
+                                : "text-red-800"
+                            }`}
+                          >
+                            {career.jobMarket === "high"
+                              ? "High Demand"
+                              : career.jobMarket === "medium"
+                              ? "Moderate Demand"
+                              : "Low Demand"}
+                          </p>
+                        </div>
                       </div>
 
-                      {/* Cons */}
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-1">
-                          Cons:
-                        </h4>
-                        <ul className="text-sm text-gray-600 list-disc list-inside">
-                          {career.cons.map((con, i) => (
-                            <li key={i}>{con}</li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      {/* Salary Range */}
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-1">
-                          Salary Range:
-                        </h4>
-                        <p className="text-gray-600 text-sm">
-                          {career.salaryRange}
-                        </p>
+                      {/* Pros & Cons */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-green-50 p-3 rounded-lg">
+                          <h4 className="text-xs font-semibold text-green-800 uppercase tracking-wider mb-2">
+                            Advantages
+                          </h4>
+                          <ul className="space-y-1">
+                            {career.pros.slice(0, 3).map((pro, i) => (
+                              <li
+                                key={i}
+                                className="flex items-start text-sm text-gray-700"
+                              >
+                                <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                {pro}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="bg-red-50 p-3 rounded-lg">
+                          <h4 className="text-xs font-semibold text-red-800 uppercase tracking-wider mb-2">
+                            Considerations
+                          </h4>
+                          <ul className="space-y-1">
+                            {career.cons.slice(0, 3).map((con, i) => (
+                              <li
+                                key={i}
+                                className="flex items-start text-sm text-gray-700"
+                              >
+                                <AlertCircle className="h-4 w-4 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                                {con}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       </div>
 
                       {/* Education Path */}
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-1">
-                          Education Path:
+                      <div className="bg-purple-50 p-3 rounded-lg">
+                        <h4 className="text-xs font-semibold text-purple-800 uppercase tracking-wider mb-1">
+                          Education Path
                         </h4>
-                        <p className="text-gray-600 text-sm">
+                        <p className="text-sm text-gray-700">
                           {career.educationPath}
                         </p>
                       </div>
 
-                      {/* Job Market */}
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-1">
-                          Job Market:
-                        </h4>
-                        <span
-                          className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                            career.jobMarket === "high"
-                              ? "bg-green-100 text-green-800"
-                              : career.jobMarket === "medium"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {career.jobMarket.charAt(0).toUpperCase() +
-                            career.jobMarket.slice(1)}{" "}
-                          Demand
-                        </span>
-                      </div>
-
                       {/* Location Scope */}
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-1">
-                          Scope:
+                      <div className="bg-indigo-50 p-3 rounded-lg">
+                        <h4 className="text-xs font-semibold text-indigo-800 uppercase tracking-wider mb-1">
+                          Scope
                         </h4>
-                        <p className="text-gray-600 text-sm">
+                        <p className="text-sm text-gray-700">
                           {career.locationScope}{" "}
-                          {career.isGlobal ? "(Global Opportunity)" : ""}
+                          {career.isGlobal && (
+                            <span className="text-indigo-600">
+                              (Global Opportunity)
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>
@@ -568,26 +632,36 @@ export default function AIQuizPage() {
             ))}
           </div>
 
+          {/* Action Buttons */}
           <div className="text-center space-y-4">
-            <Button asChild className="bg-gray-800 hover:bg-gray-700">
-              <a href="/chat">
-                <Sparkles className="h-4 w-4 mr-2" />
-                Get Detailed Career Guidance
-              </a>
-            </Button>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild variant="outline">
-                <Link href="/resume/classic">Build Your Resume</Link>
+              <Button asChild className="bg-blue-600 hover:bg-blue-700">
+                <Link href="/chat">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Get Personalized Advice
+                </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link href="/courses">Explore Courses</Link>
+                <Link href="/resume/classic">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Build Resume
+                </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link href="/jobs">Find Jobs</Link>
+                <Link href="/courses">
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Explore Courses
+                </Link>
               </Button>
-              <Button onClick={restartQuiz} variant="outline">
+            </div>
+            <div className="pt-4">
+              <Button
+                onClick={restartQuiz}
+                variant="ghost"
+                className="text-blue-600 hover:bg-blue-50"
+              >
                 <RotateCcw className="h-4 w-4 mr-2" />
-                Take Quiz Again
+                Retake Assessment
               </Button>
             </div>
           </div>
@@ -595,7 +669,6 @@ export default function AIQuizPage() {
       </div>
     );
   }
-
   // Start screen
   if (!hasStarted) {
     return (
@@ -658,7 +731,7 @@ export default function AIQuizPage() {
                 <Button
                   onClick={startQuiz}
                   disabled={isLoading}
-                  className="bg-gray-800 hover:bg-gray-700 text-white px-8 py-3 text-lg"
+                  className="bg-gray-800 cursor-pointer hover:bg-gray-700 text-white px-8 py-3 text-lg"
                 >
                   {isLoading ? "Starting..." : "Start Career Assessment"}
                   <ArrowRight className="h-5 w-5 ml-2" />
@@ -674,7 +747,7 @@ export default function AIQuizPage() {
   // Quiz in progress
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -709,7 +782,7 @@ export default function AIQuizPage() {
             >
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-xl">
+                  <CardTitle className="text-lg">
                     {currentQuestion?.question}
                   </CardTitle>
                 </CardHeader>
@@ -718,10 +791,10 @@ export default function AIQuizPage() {
                     value={selectedAnswer}
                     onValueChange={setSelectedAnswer}
                   >
-                    {currentQuestion?.options.map((option) => (
+                    {currentQuestion?.options.map((option, index) => (
                       <div
-                        key={option.value}
-                        className="flex items-center space-x-2"
+                        key={index}
+                        className="flex items-center space-x-2 my-2"
                       >
                         <RadioGroupItem
                           value={option.value}
@@ -746,6 +819,7 @@ export default function AIQuizPage() {
               variant="outline"
               onClick={() => window.history.back()}
               disabled={isLoading}
+              className="cursor-pointer hover:bg-gray-200"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
@@ -753,7 +827,7 @@ export default function AIQuizPage() {
             <Button
               onClick={submitAnswer}
               disabled={!selectedAnswer || isLoading}
-              className="bg-gray-800 hover:bg-gray-700"
+              className="bg-gray-800 cursor-pointer hover:bg-gray-700"
             >
               {isLoading
                 ? "Processing..."

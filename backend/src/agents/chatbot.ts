@@ -30,10 +30,20 @@ const SYSTEM_PROMPT = `You are KaamSathi, a friendly AI career advisor for Nepal
 - End with clear next steps
 
 5. SUGGESTIONS:
-- After the main answer, include 3-4 short follow-up questions
+- After the main answer, include 3-4 short action-oriented suggestions
+- Suggestions should be informative statements that users can explore
+- Each suggestion should begin with a verb (e.g., "Learn more about...", "Discover...", "Explore...")
+- Keep suggestions relevant to the current topic
 - Always output suggestions as **pure JSON** on the last line
-- Format must be exactly: {"suggestions": ["question 1", "question 2"]}
-- The JSON must be the very last content in your response`;
+- Format must be exactly: {"suggestions": ["suggestion 1", "suggestion 2"]}
+- The JSON must be the very last content in your response
+
+Example suggestions format:
+{"suggestions": [
+  "Discover the top 5 in-demand skills in Nepal's job market",
+  "Learn about average salaries for entry-level positions in your field",
+  "Explore government scholarship programs for skill development"
+]}`;
 
 const threadMemoryMap = new Map<string, BufferMemory>();
 
@@ -49,6 +59,70 @@ export function getMemoryForThread(threadId: string): BufferMemory {
     threadMemoryMap.set(threadId, memory);
   }
   return threadMemoryMap.get(threadId)!;
+}
+
+function extractSuggestionsAndCleanResponse(fullText: string): { cleanResponse: string; suggestions: string[] } {
+  // Initialize default values
+  let cleanResponse = fullText;
+  let suggestions: string[] = [];
+
+  // First try to find JSON at the end (most common case)
+  const jsonEndRegex = /(\{[\s]*"suggestions"[\s]*:[\s]*\[.*?\][\s]*\})[\s]*$/s;
+  const endMatch = fullText.match(jsonEndRegex);
+
+  if (endMatch && endMatch[1]) {
+    try {
+      const parsed = JSON.parse(endMatch[1]);
+      if (parsed && Array.isArray(parsed.suggestions)) {
+        suggestions = parsed.suggestions
+          .filter((s: string) => typeof s === 'string')
+          .map((s: string) => s.trim())
+          .filter(Boolean);
+
+        cleanResponse = fullText.slice(0, endMatch.index).trim();
+      }
+    } catch (err) {
+      console.warn("Failed to parse end-of-response suggestions JSON:", err);
+    }
+  }
+
+  // If no suggestions found at end, try to find anywhere in the response
+  if (suggestions.length === 0) {
+    const jsonAnywhereRegex = /(\{[\s]*"suggestions"[\s]*:[\s]*\[.*?\][\s]*\})/s;
+    const anywhereMatch = fullText.match(jsonAnywhereRegex);
+
+    if (anywhereMatch && anywhereMatch[1]) {
+      try {
+        const parsed = JSON.parse(anywhereMatch[1]);
+        if (parsed && Array.isArray(parsed.suggestions)) {
+          suggestions = parsed.suggestions
+            .filter((s: string) => typeof s === 'string')
+            .map((s: string) => s.trim())
+            .filter(Boolean);
+
+          cleanResponse = fullText.replace(anywhereMatch[1], '').trim();
+        }
+      } catch (err) {
+        console.warn("Failed to parse anywhere-in-response suggestions JSON:", err);
+      }
+    }
+  }
+
+  // Final cleanup of any remaining JSON artifacts
+  cleanResponse = cleanResponse
+    .replace(/\{\s*"suggestions"\s*:\s*\[.*?\]\s*\}/gs, '')
+    .trim();
+
+  // Fallback if no valid suggestions found
+  if (suggestions.length === 0) {
+    suggestions = [
+      "What are the best career options in Nepal right now?",
+      "How can I improve my skills for better jobs?",
+      "What are the average salaries for entry-level positions?"
+    ];
+  }
+
+  return { cleanResponse, suggestions };
 }
 
 export async function getAIResponse(
@@ -83,65 +157,8 @@ export async function getAIResponse(
     const response = result.response;
     const fullText = response.text();
 
-    // Improved suggestion extraction with guaranteed removal
-    let suggestions: string[] = [];
-    let cleanResponse = fullText;
-
-    // First try to find JSON at the end (most common case)
-    const jsonEndPattern = /\{\s*"suggestions"\s*:\s*\[.*\]\s*\}\s*$/;
-    const jsonMatch = fullText.match(jsonEndPattern);
-
-    if (jsonMatch) {
-      try {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (parsed && Array.isArray(parsed.suggestions)) {
-          suggestions = parsed.suggestions
-            .filter((s: string) => typeof s === 'string')
-            .map((s: string) => s.trim())
-            .filter(Boolean);
-
-          cleanResponse = fullText.replace(jsonEndPattern, '').trim();
-        }
-      } catch (err) {
-        console.warn("Failed to parse end-of-response suggestions JSON:", err);
-      }
-    }
-
-    // If not found at end, search anywhere in response
-    if (suggestions.length === 0) {
-      const jsonAnywherePattern = /\{\s*"suggestions"\s*:\s*\[.*\]\s*\}/;
-      const anywhereMatch = fullText.match(jsonAnywherePattern);
-
-      if (anywhereMatch) {
-        try {
-          const parsed = JSON.parse(anywhereMatch[0]);
-          if (parsed && Array.isArray(parsed.suggestions)) {
-            suggestions = parsed.suggestions
-              .filter((s: string) => typeof s === 'string')
-              .map((s: string) => s.trim())
-              .filter(Boolean);
-
-            cleanResponse = fullText.replace(jsonAnywherePattern, '').trim();
-          }
-        } catch (err) {
-          console.warn("Failed to parse anywhere-in-response suggestions JSON:", err);
-        }
-      }
-    }
-
-    // Fallback if no valid JSON found
-    if (suggestions.length === 0) {
-      suggestions = [
-        "What are the best career options in Nepal right now?",
-        "How can I improve my skills for better jobs?",
-        "What are the average salaries for entry-level positions?"
-      ];
-    }
-
-    // Final cleanup of response (remove any leftover JSON artifacts)
-    cleanResponse = cleanResponse
-      .replace(/\{\s*"suggestions"\s*:\s*\[.*\]\s*\}/g, '')
-      .trim();
+    // Extract suggestions and clean response
+    const { cleanResponse, suggestions } = extractSuggestionsAndCleanResponse(fullText);
 
     // Add assistant response to memory (without system prompt)
     await memory.chatHistory.addMessage(new AIMessage({
