@@ -1,24 +1,120 @@
 "use client"
 
-import { useChat } from "ai/react"
+import { useEffect, useRef, useState } from "react"
+import { motion } from "framer-motion"
+import { Bot, User, Send, Loader2 } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
-import { Bot, User, Send, Loader2 } from "lucide-react"
-import { motion } from "framer-motion"
-import { useEffect, useRef } from "react"
+import axios from "@/lib/axios" // Axios instance
+import ReactMarkdown from 'react-markdown';
+
+interface Message {
+  id: string
+  content: string
+  role: "user" | "assistant"
+}
 
 export default function ChatPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat()
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [threadId, setThreadId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+
+  useEffect(() => {
+    const startChat = async () => {
+      try {
+        const storedThreadId = localStorage.getItem("threadId");
+
+        if (storedThreadId) {
+          setThreadId(storedThreadId);
+
+          // Fetch history
+          const historyRes = await axios.get(`/api/ai-chatbot/history/${storedThreadId}`);
+          if (historyRes.data?.data?.messages?.length > 0) {
+            const historyMessages = historyRes.data.data.messages.map((msg: any) => ({
+              id: crypto.randomUUID(),
+              content: msg.content,
+              role: msg.role,
+            }));
+            setMessages(historyMessages);
+          }
+        } else {
+          // Start new chat
+          const res = await axios.post("/api/ai-chatbot/start");
+          const { data, metadata } = res.data;
+
+          const newThreadId = metadata.threadId;
+          setThreadId(newThreadId);
+          localStorage.setItem("threadId", newThreadId);
+
+          setMessages([
+            {
+              id: crypto.randomUUID(),
+              role: "assistant",
+              content: data.greeting,
+            },
+          ]);
+
+          // Optionally fetch history for the new thread too
+          const historyRes = await axios.get(`/api/ai-chatbot/history/${newThreadId}`);
+          if (historyRes.data?.data?.messages?.length > 0) {
+            const historyMessages = historyRes.data.data.messages.map((msg: any) => ({
+              id: crypto.randomUUID(),
+              content: msg.content,
+              role: msg.role,
+            }));
+            setMessages(historyMessages);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to start chat or fetch history", err);
+      }
+    };
+
+    startChat();
+  }, []);
 
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!input.trim() || !threadId) return
+
+    const userMessage: Message = {
+      id: crypto.randomUUID(),
+      content: input,
+      role: "user",
+    }
+
+    setMessages((prev) => [...prev, userMessage])
+    setIsLoading(true)
+    setInput("")
+
+    try {
+      const res = await axios.post("/api/ai-chatbot/send", {
+        threadId,
+        message: input,
+      })
+
+      const reply: Message = {
+        id: crypto.randomUUID(),
+        content: res.data.data.response,
+        role: "assistant",
+      }
+
+      setMessages((prev) => [...prev, reply])
+    } catch (err) {
+      console.error("Error sending message", err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const suggestedQuestions = [
     "What career is best for me with a computer science background?",
@@ -30,7 +126,7 @@ export default function ChatPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4 px-4 sm:py-8">
+    <div className="   ">
       <div className="max-w-4xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <Card className="flex flex-col h-[calc(100vh-8rem)] sm:h-[80vh]">
@@ -44,27 +140,22 @@ export default function ChatPage() {
               </p>
             </CardHeader>
 
-            <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-              {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 space-y-4">
+            <CardContent className="flex-1 flex flex-col p-0   min-h-screen">
+              <div className="flex-1   px-4 py-4 sm:px-6 sm:py-6 space-y-4">
                 {messages.length === 0 && (
                   <div className="text-center py-4 sm:py-8">
                     <Bot className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-gray-700 mb-2">Welcome to KaamSathi AI Chat!</h3>
                     <p className="text-gray-600 mb-6 text-sm sm:text-base px-4">
-                      I'm here to help you with career guidance, job search tips, and professional development advice
-                      for Nepal.
+                      I'm here to help you with career guidance, job search tips, and professional development advice for Nepal.
                     </p>
-
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-2xl mx-auto">
                       {suggestedQuestions.map((question, index) => (
                         <Button
                           key={index}
                           variant="outline"
                           className="text-left h-auto p-3 text-xs sm:text-sm bg-transparent break-words whitespace-normal"
-                          onClick={() => {
-                            handleInputChange({ target: { value: question } } as any)
-                          }}
+                          onClick={() => setInput(question)}
                         >
                           {question}
                         </Button>
@@ -82,14 +173,12 @@ export default function ChatPage() {
                     className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`flex space-x-2 sm:space-x-3 max-w-[85%] sm:max-w-3xl ${
-                        message.role === "user" ? "flex-row-reverse space-x-reverse" : ""
-                      }`}
+                      className={`flex space-x-2 sm:space-x-3 max-w-[85%] sm:max-w-3xl ${message.role === "user" ? "flex-row-reverse space-x-reverse" : ""
+                        }`}
                     >
                       <div
-                        className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
-                          message.role === "user" ? "bg-gray-800" : "bg-gray-200"
-                        }`}
+                        className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${message.role === "user" ? "bg-gray-800" : "bg-gray-200"
+                          }`}
                       >
                         {message.role === "user" ? (
                           <User className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
@@ -98,11 +187,10 @@ export default function ChatPage() {
                         )}
                       </div>
                       <div
-                        className={`rounded-xl px-3 py-2 sm:px-4 sm:py-2 break-words overflow-wrap-anywhere ${
-                          message.role === "user" ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-800"
-                        }`}
+                        className={`rounded-xl px-3 py-2 sm:px-4 sm:py-2 break-words overflow-wrap-anywhere ${message.role === "user" ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-800"
+                          }`}
                       >
-                        <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed">{message.content}</p>
+                        <div className=" text-sm sm:text-base leading-relaxed">  <ReactMarkdown>{message.content}</ReactMarkdown></div>
                       </div>
                     </div>
                   </motion.div>
@@ -123,24 +211,22 @@ export default function ChatPage() {
                     </div>
                   </div>
                 )}
-
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input Area */}
               <div className="border-t border-gray-200 p-4 sm:p-6 flex-shrink-0">
                 <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                   <div className="flex-1">
                     <Textarea
                       value={input}
-                      onChange={handleInputChange}
+                      onChange={(e) => setInput(e.target.value)}
                       placeholder="Ask me about careers, jobs, skills, or anything related to professional development in Nepal..."
                       className="min-h-[60px] sm:min-h-[60px] resize-none text-sm sm:text-base"
                       rows={2}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault()
-                          handleSubmit(e as any)
+                          handleSubmit(e)
                         }
                       }}
                     />
