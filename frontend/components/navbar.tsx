@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Menu, X, Bot, User, Briefcase, BookOpen, FileText, HelpCircle, Zap } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
+type User = {
+  name: string,
+  fullName: string,
+}
+
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
 
@@ -16,17 +21,24 @@ export function Navbar() {
     { href: "/courses", label: "Courses", icon: BookOpen },
     { href: "/jobs", label: "Jobs", icon: Briefcase },
     { href: "/remotejobs", label: "Gig Jobs", icon: Zap },
-    { href: "/profile", label: "Profile", icon: User },
   ];
 
-  const [currUser, setCurrUser] = useState(null)
+const [currUser, setCurrUser] = useState<User | null>(null)
 
   useEffect(() => {
     const userData = localStorage.getItem("userData")
     if (userData) {
       setCurrUser(JSON.parse(userData))
     }
+    console.log("Current User:", userData ? JSON.parse(userData) : "No user data found")
   }, [])
+
+    const handleLogout = () => {
+    localStorage.removeItem("userData")
+    setCurrUser(null)
+    location.reload() // or use router.refresh() if using next/navigation
+  }
+
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -51,10 +63,27 @@ export function Navbar() {
                 <span>{item.label}</span>
               </Link>
             ))}
-            {
-              !currUser &&
-              <Button className="bg-gray-800 hover:bg-gray-700"><Link href="/register">Get Started</Link></Button>
-            }
+            {currUser ? (
+             <div className="flex items-center space-x-3">
+                <Link
+                  href="/profile"
+                  className="text-sm text-gray-700 font-semibold hover:underline"
+                >
+                  Hi, {currUser.name}
+                </Link>
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  className="text-sm px-3 py-1"
+                >
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <Button className="bg-gray-800 hover:bg-gray-700">
+                <Link href="/register">Get Started</Link>
+              </Button>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -88,7 +117,31 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="px-3 py-2">
-                <Button className="w-full bg-gray-800 hover:bg-gray-700">Get Started</Button>
+                {currUser ? (
+                  <div className="flex justify-between items-center">
+                    <Link
+                      href="/profile"
+                      onClick={() => setIsOpen(false)}
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Hi, {currUser.name}
+                    </Link>
+                    <Button
+                      onClick={() => {
+                        handleLogout()
+                        setIsOpen(false)
+                      }}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Logout
+                    </Button>
+                  </div>
+                ) : (
+                  <Button className="w-full bg-gray-800 hover:bg-gray-700">
+                    <Link href="/register">Get Started</Link>
+                  </Button>
+                )}
               </div>
             </div>
           </motion.div>
