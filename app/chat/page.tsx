@@ -140,7 +140,7 @@ export default function ChatPage() {
               </p>
             </CardHeader>
 
-            <CardContent className="flex-1 flex flex-col p-0   min-h-screen">
+            <CardContent className="flex-1 flex flex-col p-0   min-h-[75vh]">
               <div className="flex-1   px-4 py-4 sm:px-6 sm:py-6 space-y-4">
                 {messages.length === 0 && (
                   <div className="text-center py-4 sm:py-8">
@@ -165,7 +165,7 @@ export default function ChatPage() {
                 )}
 
                 {messages.map((message, index) => {
-                  const isEven = index % 2 === 0 // even: right side, odd: left side
+                  const isEven = !(index % 2 === 0) // even: right side, odd: left side
 
                   return (
                     <motion.div
