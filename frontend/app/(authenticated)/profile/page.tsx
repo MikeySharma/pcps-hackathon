@@ -39,7 +39,7 @@ export default function ProfilePage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Complete Your Profile</h2>
               <p className="text-gray-600 mb-6">Create your resume first to build your professional profile</p>
               <Button asChild className="bg-gray-800 hover:bg-gray-700">
-                <Link href="/resume">Build Resume</Link>
+                <Link href="/resume/classic">Build Resume</Link>
               </Button>
             </CardContent>
           </Card>
@@ -273,7 +273,7 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button asChild className="w-full bg-gray-800 hover:bg-gray-700">
-                  <Link href="/resume">
+                  <Link href="/resume/classic">
                     <Edit className="h-4 w-4 mr-2" />
                     Edit Resume
                   </Link>

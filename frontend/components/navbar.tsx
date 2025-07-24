@@ -12,7 +12,7 @@ export function Navbar() {
   const navItems = [
     { href: "/chat", label: "AI Chat", icon: Bot },
     { href: "/quiz", label: "Quiz", icon: HelpCircle },
-    { href: "/resume", label: "Resume", icon: FileText },
+    { href: "/resume/classic", label: "Resume", icon: FileText },
     { href: "/courses", label: "Courses", icon: BookOpen },
     { href: "/jobs", label: "Jobs", icon: Briefcase },
     { href: "/remotejobs", label: "Gig Jobs", icon: Zap },

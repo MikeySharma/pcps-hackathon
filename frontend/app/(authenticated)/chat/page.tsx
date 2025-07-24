@@ -237,9 +237,9 @@ export default function ChatPage() {
                   </div>
                 )}
 
-                {messages.map((message) => (
+                {messages.map((message, index) => (
                   <motion.div
-                    key={message.id}
+                    key={index}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
