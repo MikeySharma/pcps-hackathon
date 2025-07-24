@@ -70,9 +70,10 @@ export default function LoginPage() {
         ...userData,
         loginTime: new Date().toISOString(),
       })
-
-      router.push("/quiz")
-      window.location.reload()
+      if (response) {
+        router.push("/quiz")
+        window.location.reload()
+      }
     } catch (error: any) {
       console.error("Login failed:", error)
       alert("Login failed. Please check your credentials.")
@@ -85,7 +86,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     const CurrUser = localStorage.getItem("userData");
-    if (CurrUser) {
+    const token = localStorage.getItem("token");
+    if (CurrUser && token) {
       router.push("/quiz")
     }
   }, [])

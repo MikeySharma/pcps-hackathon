@@ -15,7 +15,7 @@ export default function ProtectedLayout({
     const token = localStorage.getItem('token');
 
     if (!token) {
-      router.replace('/login'); // redirect to login if no token
+      router.push('/login'); // redirect to login if no token
     } else {
       setIsCheckingAuth(false); // allow access
     }
