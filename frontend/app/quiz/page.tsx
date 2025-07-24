@@ -60,6 +60,12 @@ export default function AIQuizPage() {
   const [error, setError] = useState<string>("")
   const [hasStarted, setHasStarted] = useState(false)
 
+  const [isResumingQuiz, setIsResumingQuiz] = useState(false)
+  const [showResumePrompt, setShowResumePrompt] = useState(false)
+  const [incompleteQuizData, setIncompleteQuizData] = useState<any>(null)
+
+const BASE_URL = `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/ai-quiz`;
+
   // Check for incomplete quiz on component mount
   useEffect(() => {
     checkIncompleteQuiz()
@@ -69,22 +75,129 @@ export default function AIQuizPage() {
     try {
       // Check if there's a stored threadId from previous session
       const storedThreadId = localStorage.getItem("quiz_thread_id")
-      if (storedThreadId) {
-        const response = await fetch(`http://localhost:5000/api/ai-quiz/progress/${storedThreadId}`)
-        console.log("Checking incomplete quiz with threadId:", storedThreadId);
-        console.log(response);
+      const storedQuizData = localStorage.getItem("quiz_session_data")
+
+      if (storedThreadId && storedQuizData) {
+        console.log("Found stored quiz session:", storedThreadId)
+
+        const response = await fetch(`${BASE_URL}/progress/${storedThreadId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+
         if (response.ok) {
           const data = await response.json()
+          console.log("Progress data:", data)
+
           if (data.success && !data.metadata.isCompleted) {
-            setMetadata(data.metadata)
-            setCurrentQuestion(data.data.questions[data.metadata.currentQuestion - 1])
-            setHasStarted(true)
+            // Parse stored session data
+            const sessionData = JSON.parse(storedQuizData)
+
+            // Use current question from API if available
+            if (data.data.currentQuestionData) {
+              sessionData.currentQuestion = data.data.currentQuestionData
+            }
+
+            setIncompleteQuizData({
+              ...data,
+              sessionData,
+            })
+            setShowResumePrompt(true)
+            return
           }
         }
+
+        // Clean up invalid session data
+        localStorage.removeItem("quiz_thread_id")
+        localStorage.removeItem("quiz_session_data")
       }
     } catch (error) {
       console.error("Error checking incomplete quiz:", error)
+      // Clean up on error
+      localStorage.removeItem("quiz_thread_id")
+      localStorage.removeItem("quiz_session_data")
     }
+  }
+
+  const resumeQuiz = async () => {
+    if (incompleteQuizData) {
+      try {
+        setIsResumingQuiz(true)
+
+        // Set the metadata first
+        setMetadata(prev => ({
+  ...prev,
+  currentQuestion: incompleteQuizData.metadata.currentQuestion,
+  totalQuestions: incompleteQuizData.metadata.totalQuestions,
+  completionPercentage: incompleteQuizData.metadata.completionPercentage,
+  threadId: incompleteQuizData.metadata.threadId || localStorage.getItem("quiz_thread_id") || "",
+}))
+
+
+        // Check if we have the current question in session data
+        if (incompleteQuizData.sessionData?.currentQuestion) {
+          setCurrentQuestion(incompleteQuizData.sessionData.currentQuestion)
+          setHasStarted(true)
+          setShowResumePrompt(false)
+        } else {
+          // If no current question in session data, fetch it from the server
+          const response = await fetch(
+            `${BASE_URL}/start/${incompleteQuizData.metadata.threadId}`,
+            { method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            },
+          )
+
+          if (response.ok) {
+            const data = await response.json()
+            if (data.success) {
+              setCurrentQuestion(data.data)
+              setHasStarted(true)
+              setShowResumePrompt(false)
+            } else {
+              throw new Error("Failed to get current question")
+            }
+          } else {
+            throw new Error("Failed to resume quiz")
+          }
+        }
+      } catch (error) {
+        console.error("Error resuming quiz:", error)
+        setError("Failed to resume quiz. Starting a new one...")
+        // Fall back to starting a fresh quiz
+        await startFreshQuiz()
+      } finally {
+        setIsResumingQuiz(false)
+      }
+    }
+  }
+
+  const startFreshQuiz = async () => {
+    // Clear stored data
+    localStorage.removeItem("quiz_thread_id")
+    localStorage.removeItem("quiz_session_data")
+    setShowResumePrompt(false)
+    setIncompleteQuizData(null)
+
+    // Reset all state
+    setCurrentQuestion(null)
+    setMetadata({
+      currentQuestion: 0,
+      totalQuestions: 10,
+      completionPercentage: 0,
+    })
+    setSelectedAnswer("")
+    setCareerSuggestions([])
+    setIsCompleted(false)
+    setError("")
+    setHasStarted(false)
+
+    // Start a new quiz immediately
+    await startQuiz()
   }
 
   const startQuiz = async () => {
@@ -92,11 +205,11 @@ export default function AIQuizPage() {
     setError("")
 
     try {
-      const response = await fetch("http://localhost:5000/api/ai-quiz/start", {
+      const response = await fetch(`${BASE_URL}/start`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       })
 
@@ -107,13 +220,22 @@ export default function AIQuizPage() {
       const data: ApiResponse = await response.json()
 
       if (data.success) {
-        setCurrentQuestion(data.data as Question)
+        const questionData = data.data as Question
+        setCurrentQuestion(questionData)
         setMetadata(data.metadata)
         setHasStarted(true)
 
-        // Store threadId for resuming later
+        // Store threadId and initial session data for resuming later
         if (data.metadata.threadId) {
           localStorage.setItem("quiz_thread_id", data.metadata.threadId)
+          localStorage.setItem(
+            "quiz_session_data",
+            JSON.stringify({
+              currentQuestion: questionData,
+              metadata: data.metadata,
+              timestamp: Date.now(),
+            }),
+          )
         }
       } else {
         setError(data.message || "Failed to start quiz")
@@ -127,13 +249,14 @@ export default function AIQuizPage() {
   }
 
   const submitAnswer = async () => {
+
     if (!selectedAnswer || !metadata.threadId) return
 
     setIsLoading(true)
     setError("")
 
     try {
-      const response = await fetch("http://localhost:5000/api/ai-quiz/submit", {
+      const response = await fetch(`${BASE_URL}/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -144,10 +267,7 @@ export default function AIQuizPage() {
           answer: selectedAnswer,
         }),
       })
-      console.log("Submitting answer:", {
-        threadId: metadata.threadId,
-        answer: selectedAnswer,
-      })
+
       if (!response.ok) {
         throw new Error("Failed to submit answer")
       }
@@ -155,23 +275,37 @@ export default function AIQuizPage() {
       const data: ApiResponse = await response.json()
 
       if (data.success) {
-        setMetadata(() => ({
+        const newMetadata = {
           ...metadata,
           currentQuestion: data.metadata.currentQuestion,
           totalQuestions: data.metadata.totalQuestions,
           completionPercentage: data.metadata.completionPercentage,
-        }))
+        }
+
+        setMetadata(newMetadata)
 
         if (data.metadata.completionPercentage === 100) {
           // Quiz completed - show results
           const suggestionData = data.data as { careerSuggestions: CareerSuggestion[] }
           setCareerSuggestions(suggestionData.careerSuggestions)
           setIsCompleted(true)
-          localStorage.removeItem("quiz_thread_id") // Clear stored threadId
+          localStorage.removeItem("quiz_thread_id")
+          localStorage.removeItem("quiz_session_data")
         } else {
-          // Next question
-          setCurrentQuestion(data.data as Question)
+          // Next question - save progress
+          const nextQuestion = data.data as Question
+          setCurrentQuestion(nextQuestion)
           setSelectedAnswer("")
+
+          // Update stored session data
+          localStorage.setItem(
+            "quiz_session_data",
+            JSON.stringify({
+              currentQuestion: nextQuestion,
+              metadata: newMetadata,
+              timestamp: Date.now(),
+            }),
+          )
         }
       } else {
         setError(data.message || "Failed to submit answer")
@@ -196,7 +330,10 @@ export default function AIQuizPage() {
     setIsCompleted(false)
     setError("")
     setHasStarted(false)
+    setShowResumePrompt(false)
+    setIncompleteQuizData(null)
     localStorage.removeItem("quiz_thread_id")
+    localStorage.removeItem("quiz_session_data")
   }
 
   // Loading state for quiz initialization
@@ -210,6 +347,57 @@ export default function AIQuizPage() {
             <p className="text-gray-600">Preparing personalized questions...</p>
           </CardContent>
         </Card>
+      </div>
+    )
+  }
+
+  // Resume quiz prompt
+  if (showResumePrompt && incompleteQuizData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <Card className="p-6">
+              <CardHeader className="text-center">
+                <div className="flex items-center justify-center mb-4">
+                  <AlertCircle className="h-12 w-12 text-blue-500" />
+                </div>
+                <CardTitle className="text-2xl font-bold text-gray-900 mb-2">Resume Your Quiz?</CardTitle>
+                <p className="text-gray-600">We found an incomplete career assessment from your previous session.</p>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-700">Progress</span>
+                    <span className="text-sm text-gray-600">
+                      Question {incompleteQuizData.metadata.currentQuestion} of{" "}
+                      {incompleteQuizData.metadata.totalQuestions}
+                    </span>
+                  </div>
+                  <Progress value={incompleteQuizData.metadata.completionPercentage} className="h-2" />
+                  <p className="text-xs text-gray-500 mt-2">
+                    {incompleteQuizData.metadata.completionPercentage}% completed
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <Button
+                    onClick={resumeQuiz}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    disabled={isResumingQuiz}
+                  >
+                    {isResumingQuiz ? "Resuming..." : "Continue Quiz"}
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                  <Button onClick={startFreshQuiz} variant="outline" className="w-full bg-transparent">
+                    Start New Quiz
+                    <RotateCcw className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
       </div>
     )
   }
