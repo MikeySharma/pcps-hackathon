@@ -72,7 +72,7 @@ export async function getAIResponse(question: string, threadId: string): Promise
     ];
 
     // Initialize the Gemini model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
     
     // Convert messages to Gemini format
     const chat = model.startChat({
