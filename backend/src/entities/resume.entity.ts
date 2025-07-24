@@ -13,6 +13,7 @@ export class Resume {
     title!: string;
 
     @Column('json')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     content!: any; // Store structured resume data
 
     @CreateDateColumn()

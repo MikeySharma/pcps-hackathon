@@ -9,6 +9,7 @@ import { aiQuizRoutes } from "./routes/ai-quiz.routes";
 import { aiChatbotRoutes } from "./routes/ai-chatbot.route";
 import { resumeRoutes } from "./routes/resume.route";
 import { courseRoutes } from "./routes/course.route";
+import { jobRoutes } from "./routes/job.route";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -30,6 +31,7 @@ app.use('/api/ai-quiz', aiQuizRoutes);
 app.use("/api/ai-chatbot", aiChatbotRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/courses", courseRoutes);
+app.use("/api/jobs", jobRoutes); // Import job routes
 
 
 // Error handling (must be after routes)
