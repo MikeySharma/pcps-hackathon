@@ -514,14 +514,14 @@ export default function JobsPage() {
         variant="outline"
         size="sm"
         onClick={() => fetchJobDetails(job.id)}
-        className="text-blue-600 border-blue-200 hover:bg-blue-50 text-sm font-medium"
+        className="text-blue-600 border-blue-200 hover:bg-blue-50 text-sm font-medium cursor-pointer"
       >
         View Details
       </Button>
       <Button
         size="sm"
         onClick={() => window.open(job.url, "_blank")}
-        className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium"
+        className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium cursor-pointer"
       >
         <ExternalLink className="h-4 w-4 mr-1.5" />
         Apply Now
@@ -585,7 +585,7 @@ export default function JobsPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full max-w-md mr-4"
           />
-          <Button onClick={searchJobs} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={searchJobs} className="bg-blue-600 cursor-pointer hover:bg-blue-700">
             <Zap className="h-4 w-4 mr-2" />
             Smart Search
           </Button>
@@ -609,8 +609,8 @@ export default function JobsPage() {
         {/* Tabs Section */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="search">Search Jobs</TabsTrigger>
-            <TabsTrigger value="bookmarked">Bookmarked Jobs</TabsTrigger>
+            <TabsTrigger className="cursor-pointer" value="search">Search Jobs</TabsTrigger>
+            <TabsTrigger className="cursor-pointer" value="bookmarked">Bookmarked Jobs</TabsTrigger>
           </TabsList>
           <TabsContent value="search">
             {loading ? (
