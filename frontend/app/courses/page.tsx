@@ -1,16 +1,27 @@
-"use client"
+/* eslint-disable @next/next/no-img-element */
+"use client";
 
-import { useEffect, useState } from "react"
-import type React from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { ImageIcon } from "lucide-react"
+import { useEffect, useState } from "react";
+import type React from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ImageIcon } from "lucide-react";
 import {
   BookmarkIcon,
   ExternalLinkIcon,
@@ -19,117 +30,118 @@ import {
   GraduationCapIcon,
   ClockIcon,
   UsersIcon,
-} from "lucide-react"
+} from "lucide-react";
 
 // Types
 interface Course {
-  id: string
-  title: string
-  description: string
-  shortDescription: string
-  provider: string
-  url: string
-  categories: string[]
-  isFree: boolean
-  imageUrl?: string
-  isBookmarked?: boolean
+  id: string;
+  title: string;
+  description: string;
+  shortDescription: string;
+  provider: string;
+  url: string;
+  categories: string[];
+  isFree: boolean;
+  imageUrl?: string;
+  isBookmarked?: boolean;
 }
 
 interface ApiResponse<T> {
-  success: boolean
-  message?: string
-  data?: T
+  success: boolean;
+  message?: string;
+  data?: T;
 }
 
 interface BookmarkResponse {
-  isBookmarked: boolean
+  isBookmarked: boolean;
 }
 
 // Custom Hook
 function useCourses() {
-  const [courses, setCourses] = useState<Course[]>([])
-  const [featuredCourses, setFeaturedCourses] = useState<Course[]>([])
-  const [userCourses, setUserCourses] = useState<Course[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
+  const [userCourses, setUserCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const BASE_URL = `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/courses`
-
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem("auth-token")
-    return token ? { Authorization: `Bearer ${token}` } : {}
-  }
+  const BASE_URL = `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/courses`;
 
   const searchCourses = async (query: string) => {
     if (!query.trim()) {
-      setCourses([])
-      return
+      setCourses([]);
+      return;
     }
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch(`${BASE_URL}/search?query=${encodeURIComponent(query)}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      })
-      const result: ApiResponse<Course[]> = await response.json()
+      const response = await fetch(
+        `${BASE_URL}/search?query=${encodeURIComponent(query)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      const result: ApiResponse<Course[]> = await response.json();
       if (result.success && result.data) {
-        setCourses(result.data)
+        setCourses(result.data);
       } else {
-        setError(result.message || "Failed to search courses")
+        setError(result.message || "Failed to search courses");
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
-      setError("Network error occurred")
+      setError("Network error occurred");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getFeaturedCourses = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
       const response = await fetch(`${BASE_URL}/featured`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      })
-      const result: ApiResponse<Course[]> = await response.json()
+      });
+      const result: ApiResponse<Course[]> = await response.json();
       if (result.success && result.data) {
-        setFeaturedCourses(result.data)
+        setFeaturedCourses(result.data);
       } else {
-        setError(result.message || "Failed to fetch featured courses")
+        setError(result.message || "Failed to fetch featured courses");
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
-      setError("Network error occurred")
+      setError("Network error occurred");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getUserCourses = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
       const response = await fetch(`${BASE_URL}/user/courses`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      })
-      const result: ApiResponse<Course[]> = await response.json()
+      });
+      const result: ApiResponse<Course[]> = await response.json();
       if (result.success && result.data) {
-        setUserCourses(result.data)
+        setUserCourses(result.data);
       } else {
-        setError(result.message || "Failed to fetch user courses")
+        setError(result.message || "Failed to fetch user courses");
       }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
-      setError("Network error occurred")
+      setError("Network error occurred");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getCourseDetails = async (courseId: string): Promise<Course | null> => {
     try {
@@ -137,16 +149,17 @@ function useCourses() {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      })
-      const result: ApiResponse<Course> = await response.json()
+      });
+      const result: ApiResponse<Course> = await response.json();
       if (result.success && result.data) {
-        return result.data
+        return result.data;
       }
-      return null
+      return null;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
-      return null
+      return null;
     }
-  }
+  };
 
   const toggleBookmark = async (courseId: string, bookmark: boolean) => {
     try {
@@ -157,23 +170,26 @@ function useCourses() {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({ bookmark }),
-      })
-      const result: ApiResponse<BookmarkResponse> = await response.json()
+      });
+      const result: ApiResponse<BookmarkResponse> = await response.json();
       if (result.success && result.data) {
         // Update the course in all relevant arrays
         const updateCourse = (course: Course) =>
-          course.id === courseId ? { ...course, isBookmarked: result.data!.isBookmarked } : course
+          course.id === courseId
+            ? { ...course, isBookmarked: result.data!.isBookmarked }
+            : course;
 
-        setCourses((prev) => prev.map(updateCourse))
-        setFeaturedCourses((prev) => prev.map(updateCourse))
-        setUserCourses((prev) => prev.map(updateCourse))
-        return result.data.isBookmarked
+        setCourses((prev) => prev.map(updateCourse));
+        setFeaturedCourses((prev) => prev.map(updateCourse));
+        setUserCourses((prev) => prev.map(updateCourse));
+        return result.data.isBookmarked;
       }
-      return null
+      return null;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
-      return null
+      return null;
     }
-  }
+  };
 
   return {
     courses,
@@ -186,45 +202,45 @@ function useCourses() {
     getUserCourses,
     getCourseDetails,
     toggleBookmark,
-  }
+  };
 }
 
 // Course Card Component
 interface CourseCardProps {
-  course: Course
-  onBookmark?: (courseId: string, bookmark: boolean) => Promise<boolean | null>
-  onViewDetails?: (course: Course) => void
+  course: Course;
+  onBookmark?: (courseId: string, bookmark: boolean) => Promise<boolean | null>;
+  onViewDetails?: (course: Course) => void;
 }
 
 function CourseCard({ course, onBookmark, onViewDetails }: CourseCardProps) {
-  const [isBookmarking, setIsBookmarking] = useState(false)
+  const [isBookmarking, setIsBookmarking] = useState(false);
 
   const handleBookmark = async () => {
-    if (!onBookmark) return
-    setIsBookmarking(true)
-    await onBookmark(course.id, !course.isBookmarked)
-    setIsBookmarking(false)
-  }
+    if (!onBookmark) return;
+    setIsBookmarking(true);
+    await onBookmark(course.id, !course.isBookmarked);
+    setIsBookmarking(false);
+  };
 
   const handleViewCourse = () => {
-    window.open(course.url, "_blank", "noopener,noreferrer")
-  }
+    window.open(course.url, "_blank", "noopener,noreferrer");
+  };
 
   return (
-    <Card className="group h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 shadow-md bg-gradient-to-br from-white to-gray-50/50">
+    <Card className="group cursor-pointer h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 shadow-md bg-gradient-to-br from-white to-gray-50/50">
       <CardHeader className="p-0">
         <div className="relative aspect-video w-full overflow-hidden rounded-t-lg bg-gradient-to-br from-blue-50 to-indigo-100">
           {course.imageUrl ? (
-  <img
-    src={course.imageUrl}
-    alt={course.title}
-    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-  />
-) : (
-  <div className="w-full h-full flex items-center justify-center bg-gray-100">
-    <ImageIcon className="h-10 w-10 text-gray-400" />
-  </div>
-)}
+            <img
+              src={course.imageUrl}
+              alt={course.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-100">
+              <ImageIcon className="h-10 w-10 text-gray-400" />
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
           {onBookmark && (
             <Button
@@ -232,11 +248,13 @@ function CourseCard({ course, onBookmark, onViewDetails }: CourseCardProps) {
               size="sm"
               onClick={handleBookmark}
               disabled={isBookmarking}
-              className="absolute top-3 right-3 h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-lg backdrop-blur-sm"
+              className="absolute cursor-pointer top-3 right-3 h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-lg backdrop-blur-sm"
             >
               <BookmarkIcon
                 className={`h-4 w-4 transition-colors ${
-                  course.isBookmarked ? "fill-yellow-500 text-yellow-500" : "text-gray-600"
+                  course.isBookmarked
+                    ? "fill-yellow-500 text-yellow-500"
+                    : "text-gray-600"
                 }`}
               />
             </Button>
@@ -250,30 +268,51 @@ function CourseCard({ course, onBookmark, onViewDetails }: CourseCardProps) {
             <h3 className="font-bold text-lg leading-tight line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors">
               {course.title}
             </h3>
-<p className="text-sm text-gray-600 mt-2 line-clamp-3 leading-relaxed">
-  {course.shortDescription?.trim() || course.description?.slice(0, 150) + '...'}
-</p>
+            <p className="text-sm text-gray-600 mt-2 line-clamp-3 leading-relaxed">
+              {course.shortDescription?.trim() ||
+                course.description?.slice(0, 150) + "..."}
+            </p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 font-medium">
-              {course.provider}
+            <Badge
+              variant="secondary"
+              className="bg-blue-100 text-blue-700 hover:bg-blue-200 font-medium"
+            >
+              Provider: {course.provider}
             </Badge>
-            {course.isFree && (
-              <Badge variant="outline" className="border-green-200 text-green-700 bg-green-50">
+            {course.isFree ? (
+              <Badge
+                variant="outline"
+                className="border-green-200 text-green-700 bg-green-50"
+              >
                 Free
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="border-red-200 text-red-700 bg-red-50"
+              >
+                Paid
               </Badge>
             )}
           </div>
 
           <div className="flex flex-wrap gap-1.5">
             {course.categories.slice(0, 2).map((category) => (
-              <Badge key={category} variant="outline" className="text-xs border-gray-200 text-gray-600 bg-gray-50">
+              <Badge
+                key={category}
+                variant="outline"
+                className="text-xs border-gray-200 text-gray-600 bg-gray-50"
+              >
                 {category}
               </Badge>
             ))}
             {course.categories.length > 2 && (
-              <Badge variant="outline" className="text-xs border-gray-200 text-gray-600 bg-gray-50">
+              <Badge
+                variant="outline"
+                className="text-xs border-gray-200 text-gray-600 bg-gray-50"
+              >
                 +{course.categories.length - 2} more
               </Badge>
             )}
@@ -286,37 +325,41 @@ function CourseCard({ course, onBookmark, onViewDetails }: CourseCardProps) {
           variant="outline"
           size="sm"
           onClick={() => onViewDetails?.(course)}
-          className="flex-1 border-gray-200 hover:bg-gray-50"
+          className="flex-1 border-gray-200 cursor-pointer hover:bg-gray-50"
         >
           View Details
         </Button>
-        <Button size="sm" onClick={handleViewCourse} className="flex-1 bg-blue-600 hover:bg-blue-700">
+        <Button
+          size="sm"
+          onClick={handleViewCourse}
+          className="flex-1 bg-blue-600 cursor-pointer hover:bg-blue-700"
+        >
           <ExternalLinkIcon className="h-4 w-4 mr-2" />
           Start Course
         </Button>
       </CardFooter>
     </Card>
-  )
+  );
 }
 
 // Course Search Component
 interface CourseSearchProps {
-  onSearch: (query: string) => void
-  loading?: boolean
+  onSearch: (query: string) => void;
+  loading?: boolean;
 }
 
 function CourseSearch({ onSearch, loading }: CourseSearchProps) {
-  const [query, setQuery] = useState("")
+  const [query, setQuery] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSearch(query)
-  }
+    e.preventDefault();
+    onSearch(query);
+  };
 
   const handleClear = () => {
-    setQuery("")
-    onSearch("")
-  }
+    setQuery("");
+    onSearch("");
+  };
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -342,7 +385,11 @@ function CourseSearch({ onSearch, loading }: CourseSearchProps) {
             </Button>
           )}
         </div>
-        <Button type="submit" disabled={loading || !query.trim()} className="h-12 px-8 bg-blue-600 hover:bg-blue-700">
+        <Button
+          type="submit"
+          disabled={loading || !query.trim()}
+          className="h-12 px-8 bg-blue-600 hover:bg-blue-700"
+        >
           {loading ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
@@ -354,29 +401,34 @@ function CourseSearch({ onSearch, loading }: CourseSearchProps) {
         </Button>
       </form>
     </div>
-  )
+  );
 }
 
 // Course Detail Modal Component
 interface CourseDetailModalProps {
-  course: Course | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onBookmark?: (courseId: string, bookmark: boolean) => Promise<boolean | null>
+  course: Course | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onBookmark?: (courseId: string, bookmark: boolean) => Promise<boolean | null>;
 }
 
-function CourseDetailModal({ course, open, onOpenChange, onBookmark }: CourseDetailModalProps) {
-  if (!course) return null
+function CourseDetailModal({
+  course,
+  open,
+  onOpenChange,
+  onBookmark,
+}: CourseDetailModalProps) {
+  if (!course) return null;
 
   const handleBookmark = async () => {
     if (onBookmark) {
-      await onBookmark(course.id, !course.isBookmarked)
+      await onBookmark(course.id, !course.isBookmarked);
     }
-  }
+  };
 
   const handleViewCourse = () => {
-    window.open(course.url, "_blank", "noopener,noreferrer")
-  }
+    window.open(course.url, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -411,12 +463,18 @@ function CourseDetailModal({ course, open, onOpenChange, onBookmark }: CourseDet
             <div className="space-y-6">
               {/* Provider and badges */}
               <div className="flex items-center gap-3 flex-wrap">
-                <Badge variant="secondary" className="bg-blue-100 text-blue-700 px-3 py-1">
+                <Badge
+                  variant="secondary"
+                  className="bg-blue-100 text-blue-700 px-3 py-1"
+                >
                   <UsersIcon className="h-3 w-3 mr-1" />
                   {course.provider}
                 </Badge>
                 {course.isFree && (
-                  <Badge variant="outline" className="border-green-200 text-green-700 bg-green-50 px-3 py-1">
+                  <Badge
+                    variant="outline"
+                    className="border-green-200 text-green-700 bg-green-50 px-3 py-1"
+                  >
                     <ClockIcon className="h-3 w-3 mr-1" />
                     Free Course
                   </Badge>
@@ -425,13 +483,19 @@ function CourseDetailModal({ course, open, onOpenChange, onBookmark }: CourseDet
 
               {/* Description */}
               <div className="space-y-3">
-                <h4 className="text-lg font-semibold text-gray-900">About This Course</h4>
-                <p className="text-gray-700 leading-relaxed text-base">{course.description}</p>
+                <h4 className="text-lg font-semibold text-gray-900">
+                  About This Course
+                </h4>
+                <p className="text-gray-700 leading-relaxed text-base">
+                  {course.description}
+                </p>
               </div>
 
               {/* Categories */}
               <div className="space-y-3">
-                <h4 className="text-lg font-semibold text-gray-900">Topics Covered</h4>
+                <h4 className="text-lg font-semibold text-gray-900">
+                  Topics Covered
+                </h4>
                 <div className="flex flex-wrap gap-2">
                   {course.categories.map((category) => (
                     <Badge
@@ -457,12 +521,19 @@ function CourseDetailModal({ course, open, onOpenChange, onBookmark }: CourseDet
                   className="flex-1 h-12 border-gray-200 hover:bg-gray-50 bg-transparent"
                 >
                   <BookmarkIcon
-                    className={`h-4 w-4 mr-2 ${course.isBookmarked ? "fill-yellow-500 text-yellow-500" : ""}`}
+                    className={`h-4 w-4 mr-2 ${
+                      course.isBookmarked
+                        ? "fill-yellow-500 text-yellow-500"
+                        : ""
+                    }`}
                   />
                   {course.isBookmarked ? "Bookmarked" : "Bookmark Course"}
                 </Button>
               )}
-              <Button onClick={handleViewCourse} className="flex-1 h-12 bg-blue-600 hover:bg-blue-700">
+              <Button
+                onClick={handleViewCourse}
+                className="flex-1 h-12 bg-blue-600 hover:bg-blue-700"
+              >
                 <ExternalLinkIcon className="h-4 w-4 mr-2" />
                 Start Learning
               </Button>
@@ -471,7 +542,7 @@ function CourseDetailModal({ course, open, onOpenChange, onBookmark }: CourseDet
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // Main Component
@@ -486,35 +557,41 @@ export default function CoursesPage() {
     getFeaturedCourses,
     getUserCourses,
     toggleBookmark,
-  } = useCourses()
+  } = useCourses();
 
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState("featured")
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("featured");
 
   useEffect(() => {
-    getFeaturedCourses()
-  }, [])
+    getFeaturedCourses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleViewDetails = (course: Course) => {
-    setSelectedCourse(course)
-    setModalOpen(true)
-  }
+    setSelectedCourse(course);
+    setModalOpen(true);
+  };
 
   const handleTabChange = (value: string) => {
-    setActiveTab(value)
+    setActiveTab(value);
     if (value === "bookmarked") {
-      getUserCourses()
+      getUserCourses();
     }
-  }
+  };
 
   const CourseGrid = ({ courses: courseList }: { courses: Course[] }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
       {courseList.map((course) => (
-        <CourseCard key={course.id} course={course} onBookmark={toggleBookmark} onViewDetails={handleViewDetails} />
+        <CourseCard
+          key={course.id}
+          course={course}
+          onBookmark={toggleBookmark}
+          onViewDetails={handleViewDetails}
+        />
       ))}
     </div>
-  )
+  );
 
   const LoadingSkeleton = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
@@ -547,9 +624,15 @@ export default function CoursesPage() {
         </Card>
       ))}
     </div>
-  )
+  );
 
-  const EmptyState = ({ title, description }: { title: string; description: string }) => (
+  const EmptyState = ({
+    title,
+    description,
+  }: {
+    title: string;
+    description: string;
+  }) => (
     <div className="text-center py-16">
       <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
         <GraduationCapIcon className="h-12 w-12 text-gray-400" />
@@ -557,7 +640,7 @@ export default function CoursesPage() {
       <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
       <p className="text-gray-600 max-w-md mx-auto">{description}</p>
     </div>
-  )
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
@@ -568,20 +651,34 @@ export default function CoursesPage() {
             Discover Amazing Courses
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Expand your knowledge with carefully curated courses from top providers around the world
+            Expand your knowledge with carefully curated courses from top
+            providers around the world
           </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
+        <Tabs
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="space-y-8"
+        >
           <div className="flex justify-center">
             <TabsList className="grid w-full max-w-md grid-cols-3 h-12 bg-gray-100">
-              <TabsTrigger value="featured" className="text-sm font-medium">
+              <TabsTrigger
+                value="featured"
+                className="text-sm font-medium cursor-pointer"
+              >
                 Featured
               </TabsTrigger>
-              <TabsTrigger value="search" className="text-sm font-medium">
+              <TabsTrigger
+                value="search"
+                className="text-sm font-medium cursor-pointer"
+              >
                 Search
               </TabsTrigger>
-              <TabsTrigger value="bookmarked" className="text-sm font-medium">
+              <TabsTrigger
+                value="bookmarked"
+                className="text-sm font-medium cursor-pointer"
+              >
                 My Courses
               </TabsTrigger>
             </TabsList>
@@ -589,13 +686,19 @@ export default function CoursesPage() {
 
           <TabsContent value="featured" className="space-y-8">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Featured Courses</h2>
-              <p className="text-gray-600">Hand-picked courses to help you learn something new</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Featured Courses
+              </h2>
+              <p className="text-gray-600">
+                Hand-picked courses to help you learn something new
+              </p>
             </div>
 
             {error && (
               <Alert className="max-w-2xl mx-auto border-red-200 bg-red-50">
-                <AlertDescription className="text-red-700">{error}</AlertDescription>
+                <AlertDescription className="text-red-700">
+                  {error}
+                </AlertDescription>
               </Alert>
             )}
 
@@ -614,15 +717,21 @@ export default function CoursesPage() {
           <TabsContent value="search" className="space-y-8">
             <div className="text-center space-y-6">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Search Courses</h2>
-                <p className="text-gray-600">Find the perfect course for your learning goals</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Search Courses
+                </h2>
+                <p className="text-gray-600">
+                  Find the perfect course for your learning goals
+                </p>
               </div>
               <CourseSearch onSearch={searchCourses} loading={loading} />
             </div>
 
             {error && (
               <Alert className="max-w-2xl mx-auto border-red-200 bg-red-50">
-                <AlertDescription className="text-red-700">{error}</AlertDescription>
+                <AlertDescription className="text-red-700">
+                  {error}
+                </AlertDescription>
               </Alert>
             )}
 
@@ -640,13 +749,19 @@ export default function CoursesPage() {
 
           <TabsContent value="bookmarked" className="space-y-8">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">My Bookmarked Courses</h2>
-              <p className="text-gray-600">Your saved courses for future learning</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                My Bookmarked Courses
+              </h2>
+              <p className="text-gray-600">
+                Your saved courses for future learning
+              </p>
             </div>
 
             {error && (
               <Alert className="max-w-2xl mx-auto border-red-200 bg-red-50">
-                <AlertDescription className="text-red-700">{error}</AlertDescription>
+                <AlertDescription className="text-red-700">
+                  {error}
+                </AlertDescription>
               </Alert>
             )}
 
@@ -671,5 +786,5 @@ export default function CoursesPage() {
         />
       </div>
     </div>
-  )
+  );
 }

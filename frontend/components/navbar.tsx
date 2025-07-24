@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Bot, User, Briefcase, BookOpen, FileText, HelpCircle, Zap } from "lucide-react"
+import { Menu, X, Bot, User, Briefcase, BookOpen, FileText, HelpCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 export function Navbar() {
@@ -15,7 +15,6 @@ export function Navbar() {
     { href: "/resume/classic", label: "Resume", icon: FileText },
     { href: "/courses", label: "Courses", icon: BookOpen },
     { href: "/jobs", label: "Jobs", icon: Briefcase },
-    { href: "/remotejobs", label: "Gig Jobs", icon: Zap },
     { href: "/profile", label: "Profile", icon: User },
   ];
 

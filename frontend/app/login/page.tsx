@@ -1,21 +1,31 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Bot, Eye, EyeOff, Mail, Lock } from "lucide-react"
-import Link from "next/link"
-import { motion } from "framer-motion"
-import { useRouter } from "next/navigation"
-import { storage } from "@/lib/storage"
-import axios from "@/lib/axios"
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Bot, Eye, EyeOff, Mail, Lock } from "lucide-react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { storage } from "@/lib/storage";
+import axios from "@/lib/axios";
 
-function saveLoginToResumeData(loginData: { email: string; name: string; loginTime: string }) {
+function saveLoginToResumeData(loginData: {
+  email: string;
+  name: string;
+  loginTime: string;
+}) {
   const resumeData = {
     personalInfo: {
       fullName: loginData.name,
@@ -23,72 +33,74 @@ function saveLoginToResumeData(loginData: { email: string; name: string; loginTi
       phone: "",
       location: "",
       linkedin: "",
-      website: ""
+      website: "",
     },
     summary: "",
     experience: [],
     education: [],
     skills: [],
-    languages: []
-  }
+    languages: [],
+  };
 
-  localStorage.setItem("resumeData", JSON.stringify(resumeData))
+  localStorage.setItem("resumeData", JSON.stringify(resumeData));
 }
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
       const response = await axios.post("/api/auth/login", {
         email,
         password, // Make sure you're collecting password from form too
-      })
+      });
 
       const userData = response.data?.user || {
         email,
         name: email.split("@")[0],
-      }
-      localStorage.setItem("token", response.data.data.token)
-      localStorage.setItem("userData", JSON.stringify(userData))
+      };
+      localStorage.setItem("token", response.data.data.token);
+      localStorage.setItem("userData", JSON.stringify(userData));
 
       saveLoginToResumeData({
         email: userData.email,
         name: userData.name,
         loginTime: new Date().toISOString(),
-      })
+      });
 
       storage.setUser({
         ...userData,
         loginTime: new Date().toISOString(),
-      })
+      });
 
-      router.push("/quiz")
-      window.location.reload()
+      router.push("/quiz");
+      window.location.reload();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error("Login failed:", error)
-      alert("Login failed. Please check your credentials.")
+      console.error("Login failed:", error);
+      alert("Login failed. Please check your credentials.");
     } finally {
       setTimeout(() => {
-        setIsLoading(false)
+        setIsLoading(false);
       }, 1500);
     }
-  }
+  };
 
   useEffect(() => {
-    const CurrUser = localStorage.getItem("userData");
+    const CurrUser = localStorage.getItem("token");
     if (CurrUser) {
-      router.push("/quiz")
+      router.push("/quiz");
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -99,18 +111,25 @@ export default function LoginPage() {
         className="max-w-md w-full space-y-8"
       >
         <div className="text-center">
-          <Link href="/" className="flex items-center justify-center space-x-2 mb-6">
+          <Link
+            href="/"
+            className="flex items-center justify-center space-x-2 mb-6"
+          >
             <Bot className="h-10 w-10 text-gray-800" />
             <span className="text-2xl font-bold text-gray-800">KaamSathi</span>
           </Link>
           <h2 className="text-3xl font-bold text-gray-900">Welcome back</h2>
-          <p className="mt-2 text-gray-600">Sign in to your account to continue</p>
+          <p className="mt-2 text-gray-600">
+            Sign in to your account to continue
+          </p>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Sign In</CardTitle>
-            <CardDescription>Enter your credentials to access your account</CardDescription>
+            <CardDescription>
+              Enter your credentials to access your account
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-6">
@@ -149,7 +168,11 @@ export default function LoginPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -160,18 +183,27 @@ export default function LoginPage() {
                   <Checkbox
                     id="remember"
                     checked={rememberMe}
-                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                    onCheckedChange={(checked) =>
+                      setRememberMe(checked as boolean)
+                    }
                   />
                   <Label htmlFor="remember" className="text-sm text-gray-600">
                     Remember me
                   </Label>
                 </div>
-                <Link href="/forgot-password" className="text-sm text-gray-600 hover:text-gray-800">
+                <Link
+                  href="/forgot-password"
+                  className="text-sm text-gray-600 hover:text-gray-800"
+                >
                   Forgot password?
                 </Link>
               </div>
 
-              <Button type="submit" disabled={isLoading} className="w-full bg-gray-800 hover:bg-gray-700">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full cursor-pointer bg-gray-800 hover:bg-gray-700"
+              >
                 {isLoading ? (
                   <div className="flex items-center space-x-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -189,7 +221,9 @@ export default function LoginPage() {
                   <div className="w-full border-t border-gray-300" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                  <span className="px-2 bg-white text-gray-500">
+                    Or continue with
+                  </span>
                 </div>
               </div>
 
@@ -216,7 +250,11 @@ export default function LoginPage() {
                   Google
                 </Button>
                 <Button variant="outline" className="bg-transparent">
-                  <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="h-4 w-4 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                   </svg>
                   Facebook
@@ -226,8 +264,11 @@ export default function LoginPage() {
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Don't have an account?{" "}
-                <Link href="/register" className="font-medium text-gray-800 hover:text-gray-600">
+                Don&apos;t have an account?{" "}
+                <Link
+                  href="/register"
+                  className="font-medium text-gray-800 hover:text-gray-600"
+                >
                   Sign up
                 </Link>
               </p>
@@ -236,5 +277,5 @@ export default function LoginPage() {
         </Card>
       </motion.div>
     </div>
-  )
+  );
 }
