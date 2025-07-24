@@ -1,290 +1,674 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import type React from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, Clock, Users, Star, Search, Filter } from "lucide-react"
-import Link from "next/link"
-import { motion } from "framer-motion"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { ImageIcon } from "lucide-react"
+import {
+  BookmarkIcon,
+  ExternalLinkIcon,
+  SearchIcon,
+  XIcon,
+  GraduationCapIcon,
+  ClockIcon,
+  UsersIcon,
+} from "lucide-react"
 
+// Types
 interface Course {
   id: string
   title: string
   description: string
-  instructor: string
-  duration: string
-  level: "Beginner" | "Intermediate" | "Advanced"
-  category: string
-  price: number
-  rating: number
-  students: number
-  image: string
-  tags: string[]
+  shortDescription: string
+  provider: string
+  url: string
+  categories: string[]
+  isFree: boolean
+  imageUrl?: string
+  isBookmarked?: boolean
 }
 
-const courses: Course[] = [
-  {
-    id: "digital-literacy",
-    title: "Digital Literacy for Modern Workplace",
-    description: "Master essential digital skills including computer basics, internet usage, and office software.",
-    instructor: "Rajesh Sharma",
-    duration: "4 weeks",
-    level: "Beginner",
-    category: "Technology",
-    price: 0,
-    rating: 4.8,
-    students: 1250,
-    image: "/placeholder.svg?height=200&width=300",
-    tags: ["Computer Skills", "Office Software", "Internet"],
-  },
-  {
-    id: "interview-skills",
-    title: "Interview Skills & Communication",
-    description: "Build confidence and master interview techniques for landing your dream job in Nepal.",
-    instructor: "Priya Thapa",
-    duration: "2 weeks",
-    level: "Beginner",
-    category: "Career Development",
-    price: 1500,
-    rating: 4.9,
-    students: 890,
-    image: "/placeholder.svg?height=200&width=300",
-    tags: ["Communication", "Interview Prep", "Confidence"],
-  },
-  {
-    id: "web-development",
-    title: "Complete Web Development Bootcamp",
-    description: "Learn HTML, CSS, JavaScript, and React to become a full-stack web developer.",
-    instructor: "Amit Gurung",
-    duration: "12 weeks",
-    level: "Intermediate",
-    category: "Technology",
-    price: 8000,
-    rating: 4.7,
-    students: 456,
-    image: "/placeholder.svg?height=200&width=300",
-    tags: ["HTML", "CSS", "JavaScript", "React"],
-  },
-  {
-    id: "business-english",
-    title: "Business English for Professionals",
-    description: "Improve your English communication skills for professional environments.",
-    instructor: "Sarah Johnson",
-    duration: "6 weeks",
-    level: "Intermediate",
-    category: "Language",
-    price: 3000,
-    rating: 4.6,
-    students: 678,
-    image: "/placeholder.svg?height=200&width=300",
-    tags: ["English", "Communication", "Business"],
-  },
-  {
-    id: "data-analysis",
-    title: "Data Analysis with Excel & Python",
-    description: "Learn to analyze data using Excel and Python for business insights.",
-    instructor: "Dr. Binod Shrestha",
-    duration: "8 weeks",
-    level: "Advanced",
-    category: "Data Science",
-    price: 5500,
-    rating: 4.8,
-    students: 234,
-    image: "/placeholder.svg?height=200&width=300",
-    tags: ["Excel", "Python", "Data Analysis", "Statistics"],
-  },
-  {
-    id: "digital-marketing",
-    title: "Digital Marketing Mastery",
-    description: "Master social media marketing, SEO, and online advertising strategies.",
-    instructor: "Sita Rai",
-    duration: "10 weeks",
-    level: "Intermediate",
-    category: "Marketing",
-    price: 4500,
-    rating: 4.7,
-    students: 567,
-    image: "/placeholder.svg?height=200&width=300",
-    tags: ["SEO", "Social Media", "Advertising", "Analytics"],
-  },
-]
+interface ApiResponse<T> {
+  success: boolean
+  message?: string
+  data?: T
+}
 
-const categories = ["All", "Technology", "Career Development", "Language", "Data Science", "Marketing"]
-const levels = ["All", "Beginner", "Intermediate", "Advanced"]
+interface BookmarkResponse {
+  isBookmarked: boolean
+}
 
-export default function CoursesPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("All")
-  const [selectedLevel, setSelectedLevel] = useState("All")
+// Custom Hook
+function useCourses() {
+  const [courses, setCourses] = useState<Course[]>([])
+  const [featuredCourses, setFeaturedCourses] = useState<Course[]>([])
+  const [userCourses, setUserCourses] = useState<Course[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const filteredCourses = courses.filter((course) => {
-    const matchesSearch =
-      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-    const matchesCategory = selectedCategory === "All" || course.category === selectedCategory
-    const matchesLevel = selectedLevel === "All" || course.level === selectedLevel
+  const BASE_URL = `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/courses`
 
-    return matchesSearch && matchesCategory && matchesLevel
-  })
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("auth-token")
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  }
+
+  const searchCourses = async (query: string) => {
+    if (!query.trim()) {
+      setCourses([])
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`${BASE_URL}/search?query=${encodeURIComponent(query)}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+      const result: ApiResponse<Course[]> = await response.json()
+      if (result.success && result.data) {
+        setCourses(result.data)
+      } else {
+        setError(result.message || "Failed to search courses")
+      }
+    } catch (err) {
+      setError("Network error occurred")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getFeaturedCourses = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`${BASE_URL}/featured`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+      const result: ApiResponse<Course[]> = await response.json()
+      if (result.success && result.data) {
+        setFeaturedCourses(result.data)
+      } else {
+        setError(result.message || "Failed to fetch featured courses")
+      }
+    } catch (err) {
+      setError("Network error occurred")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getUserCourses = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`${BASE_URL}/user/courses`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+      const result: ApiResponse<Course[]> = await response.json()
+      if (result.success && result.data) {
+        setUserCourses(result.data)
+      } else {
+        setError(result.message || "Failed to fetch user courses")
+      }
+    } catch (err) {
+      setError("Network error occurred")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getCourseDetails = async (courseId: string): Promise<Course | null> => {
+    try {
+      const response = await fetch(`${BASE_URL}/course/${courseId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+      const result: ApiResponse<Course> = await response.json()
+      if (result.success && result.data) {
+        return result.data
+      }
+      return null
+    } catch (err) {
+      return null
+    }
+  }
+
+  const toggleBookmark = async (courseId: string, bookmark: boolean) => {
+    try {
+      const response = await fetch(`${BASE_URL}/${courseId}/bookmark`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ bookmark }),
+      })
+      const result: ApiResponse<BookmarkResponse> = await response.json()
+      if (result.success && result.data) {
+        // Update the course in all relevant arrays
+        const updateCourse = (course: Course) =>
+          course.id === courseId ? { ...course, isBookmarked: result.data!.isBookmarked } : course
+
+        setCourses((prev) => prev.map(updateCourse))
+        setFeaturedCourses((prev) => prev.map(updateCourse))
+        setUserCourses((prev) => prev.map(updateCourse))
+        return result.data.isBookmarked
+      }
+      return null
+    } catch (err) {
+      return null
+    }
+  }
+
+  return {
+    courses,
+    featuredCourses,
+    userCourses,
+    loading,
+    error,
+    searchCourses,
+    getFeaturedCourses,
+    getUserCourses,
+    getCourseDetails,
+    toggleBookmark,
+  }
+}
+
+// Course Card Component
+interface CourseCardProps {
+  course: Course
+  onBookmark?: (courseId: string, bookmark: boolean) => Promise<boolean | null>
+  onViewDetails?: (course: Course) => void
+}
+
+function CourseCard({ course, onBookmark, onViewDetails }: CourseCardProps) {
+  const [isBookmarking, setIsBookmarking] = useState(false)
+
+  const handleBookmark = async () => {
+    if (!onBookmark) return
+    setIsBookmarking(true)
+    await onBookmark(course.id, !course.isBookmarked)
+    setIsBookmarking(false)
+  }
+
+  const handleViewCourse = () => {
+    window.open(course.url, "_blank", "noopener,noreferrer")
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Skill Development Courses</h1>
-          <p className="text-gray-600">
-            Build in-demand skills with our curated courses designed for the Nepali job market
-          </p>
-        </motion.div>
+    <Card className="group h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 shadow-md bg-gradient-to-br from-white to-gray-50/50">
+      <CardHeader className="p-0">
+        <div className="relative aspect-video w-full overflow-hidden rounded-t-lg bg-gradient-to-br from-blue-50 to-indigo-100">
+          {course.imageUrl ? (
+  <img
+    src={course.imageUrl}
+    alt={course.title}
+    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+  />
+) : (
+  <div className="w-full h-full flex items-center justify-center bg-gray-100">
+    <ImageIcon className="h-10 w-10 text-gray-400" />
+  </div>
+)}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+          {onBookmark && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleBookmark}
+              disabled={isBookmarking}
+              className="absolute top-3 right-3 h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-lg backdrop-blur-sm"
+            >
+              <BookmarkIcon
+                className={`h-4 w-4 transition-colors ${
+                  course.isBookmarked ? "fill-yellow-500 text-yellow-500" : "text-gray-600"
+                }`}
+              />
+            </Button>
+          )}
+        </div>
+      </CardHeader>
 
-        {/* Filters */}
-        <Card className="mb-8">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search courses..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+      <CardContent className="flex-1 p-6">
+        <div className="space-y-4">
+          <div>
+            <h3 className="font-bold text-lg leading-tight line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors">
+              {course.title}
+            </h3>
+<p className="text-sm text-gray-600 mt-2 line-clamp-3 leading-relaxed">
+  {course.shortDescription?.trim() || course.description?.slice(0, 150) + '...'}
+</p>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 font-medium">
+              {course.provider}
+            </Badge>
+            {course.isFree && (
+              <Badge variant="outline" className="border-green-200 text-green-700 bg-green-50">
+                Free
+              </Badge>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            {course.categories.slice(0, 2).map((category) => (
+              <Badge key={category} variant="outline" className="text-xs border-gray-200 text-gray-600 bg-gray-50">
+                {category}
+              </Badge>
+            ))}
+            {course.categories.length > 2 && (
+              <Badge variant="outline" className="text-xs border-gray-200 text-gray-600 bg-gray-50">
+                +{course.categories.length - 2} more
+              </Badge>
+            )}
+          </div>
+        </div>
+      </CardContent>
+
+      <CardFooter className="p-6 pt-0 gap-3">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onViewDetails?.(course)}
+          className="flex-1 border-gray-200 hover:bg-gray-50"
+        >
+          View Details
+        </Button>
+        <Button size="sm" onClick={handleViewCourse} className="flex-1 bg-blue-600 hover:bg-blue-700">
+          <ExternalLinkIcon className="h-4 w-4 mr-2" />
+          Start Course
+        </Button>
+      </CardFooter>
+    </Card>
+  )
+}
+
+// Course Search Component
+interface CourseSearchProps {
+  onSearch: (query: string) => void
+  loading?: boolean
+}
+
+function CourseSearch({ onSearch, loading }: CourseSearchProps) {
+  const [query, setQuery] = useState("")
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSearch(query)
+  }
+
+  const handleClear = () => {
+    setQuery("")
+    onSearch("")
+  }
+
+  return (
+    <div className="w-full max-w-2xl mx-auto">
+      <form onSubmit={handleSubmit} className="flex gap-3">
+        <div className="relative flex-1">
+          <SearchIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Search for courses, topics, or providers..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="pl-12 pr-12 h-12 text-base border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+          />
+          {query && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleClear}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100"
+            >
+              <XIcon className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        <Button type="submit" disabled={loading || !query.trim()} className="h-12 px-8 bg-blue-600 hover:bg-blue-700">
+          {loading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+              Searching...
+            </>
+          ) : (
+            "Search"
+          )}
+        </Button>
+      </form>
+    </div>
+  )
+}
+
+// Course Detail Modal Component
+interface CourseDetailModalProps {
+  course: Course | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onBookmark?: (courseId: string, bookmark: boolean) => Promise<boolean | null>
+}
+
+function CourseDetailModal({ course, open, onOpenChange, onBookmark }: CourseDetailModalProps) {
+  if (!course) return null
+
+  const handleBookmark = async () => {
+    if (onBookmark) {
+      await onBookmark(course.id, !course.isBookmarked)
+    }
+  }
+
+  const handleViewCourse = () => {
+    window.open(course.url, "_blank", "noopener,noreferrer")
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+        <div className="flex flex-col h-full">
+          {/* Header with image */}
+          <div className="relative">
+            {course.imageUrl ? (
+              <div className="aspect-[2/1] w-full overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100">
+                <img
+                  src={course.imageUrl || "/placeholder.svg"}
+                  alt={course.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
               </div>
-              <div className="flex gap-4">
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-[180px]">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                  <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="Level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {levels.map((level) => (
-                      <SelectItem key={level} value={level}>
-                        {level}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            ) : (
+              <div className="aspect-[2/1] w-full bg-gradient-to-br from-blue-100 to-indigo-200 flex items-center justify-center">
+                <GraduationCapIcon className="h-16 w-16 text-blue-500" />
+              </div>
+            )}
+
+            <DialogHeader className="absolute bottom-0 left-0 right-0 p-6 text-white">
+              <DialogTitle className="text-2xl font-bold leading-tight text-white drop-shadow-lg">
+                {course.title}
+              </DialogTitle>
+            </DialogHeader>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="space-y-6">
+              {/* Provider and badges */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <Badge variant="secondary" className="bg-blue-100 text-blue-700 px-3 py-1">
+                  <UsersIcon className="h-3 w-3 mr-1" />
+                  {course.provider}
+                </Badge>
+                {course.isFree && (
+                  <Badge variant="outline" className="border-green-200 text-green-700 bg-green-50 px-3 py-1">
+                    <ClockIcon className="h-3 w-3 mr-1" />
+                    Free Course
+                  </Badge>
+                )}
+              </div>
+
+              {/* Description */}
+              <div className="space-y-3">
+                <h4 className="text-lg font-semibold text-gray-900">About This Course</h4>
+                <p className="text-gray-700 leading-relaxed text-base">{course.description}</p>
+              </div>
+
+              {/* Categories */}
+              <div className="space-y-3">
+                <h4 className="text-lg font-semibold text-gray-900">Topics Covered</h4>
+                <div className="flex flex-wrap gap-2">
+                  {course.categories.map((category) => (
+                    <Badge
+                      key={category}
+                      variant="outline"
+                      className="border-gray-200 text-gray-700 bg-gray-50 px-3 py-1"
+                    >
+                      {category}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Course Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course, index) => (
-            <motion.div
-              key={course.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-            >
-              <Card className="h-full hover:shadow-lg transition-shadow group">
-                <div className="aspect-video bg-gray-200 rounded-t-lg overflow-hidden">
-                  <img
-                    src={course.image || "/placeholder.svg"}
-                    alt={course.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          {/* Footer actions */}
+          <div className="border-t bg-gray-50/50 p-6">
+            <div className="flex gap-3">
+              {onBookmark && (
+                <Button
+                  variant="outline"
+                  onClick={handleBookmark}
+                  className="flex-1 h-12 border-gray-200 hover:bg-gray-50 bg-transparent"
+                >
+                  <BookmarkIcon
+                    className={`h-4 w-4 mr-2 ${course.isBookmarked ? "fill-yellow-500 text-yellow-500" : ""}`}
                   />
-                </div>
-                <CardHeader>
-                  <div className="flex items-start justify-between mb-2">
-                    <Badge
-                      variant={
-                        course.level === "Beginner"
-                          ? "secondary"
-                          : course.level === "Intermediate"
-                            ? "default"
-                            : "destructive"
-                      }
-                    >
-                      {course.level}
-                    </Badge>
-                    <div className="text-right">
-                      {course.price === 0 ? (
-                        <span className="text-lg font-bold text-green-600">Free</span>
-                      ) : (
-                        <span className="text-lg font-bold text-gray-900">NPR {course.price.toLocaleString()}</span>
-                      )}
-                    </div>
-                  </div>
-                  <CardTitle className="text-lg leading-tight">{course.title}</CardTitle>
-                  <CardDescription className="text-sm">{course.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between text-sm text-gray-600">
-                    <div className="flex items-center space-x-1">
-                      <Clock className="h-4 w-4" />
-                      <span>{course.duration}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Users className="h-4 w-4" />
-                      <span>{course.students.toLocaleString()}</span>
-                    </div>
-                  </div>
+                  {course.isBookmarked ? "Bookmarked" : "Bookmark Course"}
+                </Button>
+              )}
+              <Button onClick={handleViewCourse} className="flex-1 h-12 bg-blue-600 hover:bg-blue-700">
+                <ExternalLinkIcon className="h-4 w-4 mr-2" />
+                Start Learning
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className="text-sm font-medium">{course.rating}</span>
-                    </div>
-                    <span className="text-sm text-gray-600">• {course.instructor}</span>
-                  </div>
+// Main Component
+export default function CoursesPage() {
+  const {
+    courses,
+    featuredCourses,
+    userCourses,
+    loading,
+    error,
+    searchCourses,
+    getFeaturedCourses,
+    getUserCourses,
+    toggleBookmark,
+  } = useCourses()
 
-                  <div className="flex flex-wrap gap-1">
-                    {course.tags.slice(0, 3).map((tag, i) => (
-                      <Badge key={i} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                    {course.tags.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{course.tags.length - 3}
-                      </Badge>
-                    )}
-                  </div>
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState("featured")
 
-                  <Button asChild className="w-full bg-gray-800 hover:bg-gray-700">
-                    <Link href={`/courses/${course.id}`}>
-                      <BookOpen className="h-4 w-4 mr-2" />
-                      {course.price === 0 ? "Enroll Free" : "Enroll Now"}
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+  useEffect(() => {
+    getFeaturedCourses()
+  }, [])
+
+  const handleViewDetails = (course: Course) => {
+    setSelectedCourse(course)
+    setModalOpen(true)
+  }
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    if (value === "bookmarked") {
+      getUserCourses()
+    }
+  }
+
+  const CourseGrid = ({ courses: courseList }: { courses: Course[] }) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+      {courseList.map((course) => (
+        <CourseCard key={course.id} course={course} onBookmark={toggleBookmark} onViewDetails={handleViewDetails} />
+      ))}
+    </div>
+  )
+
+  const LoadingSkeleton = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <Card key={i} className="h-full flex flex-col">
+          <div className="p-0">
+            <Skeleton className="aspect-video w-full rounded-t-lg" />
+          </div>
+          <div className="p-6 space-y-4 flex-1">
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-4/5" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-6 w-20" />
+              <Skeleton className="h-6 w-16" />
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-5 w-16" />
+              <Skeleton className="h-5 w-20" />
+            </div>
+          </div>
+          <div className="p-6 pt-0">
+            <div className="flex gap-3">
+              <Skeleton className="h-9 flex-1" />
+              <Skeleton className="h-9 flex-1" />
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  )
+
+  const EmptyState = ({ title, description }: { title: string; description: string }) => (
+    <div className="text-center py-16">
+      <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+        <GraduationCapIcon className="h-12 w-12 text-gray-400" />
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+      <p className="text-gray-600 max-w-md mx-auto">{description}</p>
+    </div>
+  )
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Discover Amazing Courses
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Expand your knowledge with carefully curated courses from top providers around the world
+          </p>
         </div>
 
-        {filteredCourses.length === 0 && (
-          <div className="text-center py-12">
-            <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">No courses found</h3>
-            <p className="text-gray-600">Try adjusting your search criteria or browse all courses</p>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
+          <div className="flex justify-center">
+            <TabsList className="grid w-full max-w-md grid-cols-3 h-12 bg-gray-100">
+              <TabsTrigger value="featured" className="text-sm font-medium">
+                Featured
+              </TabsTrigger>
+              <TabsTrigger value="search" className="text-sm font-medium">
+                Search
+              </TabsTrigger>
+              <TabsTrigger value="bookmarked" className="text-sm font-medium">
+                My Courses
+              </TabsTrigger>
+            </TabsList>
           </div>
-        )}
+
+          <TabsContent value="featured" className="space-y-8">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Featured Courses</h2>
+              <p className="text-gray-600">Hand-picked courses to help you learn something new</p>
+            </div>
+
+            {error && (
+              <Alert className="max-w-2xl mx-auto border-red-200 bg-red-50">
+                <AlertDescription className="text-red-700">{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {loading ? (
+              <LoadingSkeleton />
+            ) : featuredCourses.length > 0 ? (
+              <CourseGrid courses={featuredCourses} />
+            ) : (
+              <EmptyState
+                title="No Featured Courses"
+                description="We're working on bringing you amazing featured courses. Check back soon!"
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="search" className="space-y-8">
+            <div className="text-center space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Search Courses</h2>
+                <p className="text-gray-600">Find the perfect course for your learning goals</p>
+              </div>
+              <CourseSearch onSearch={searchCourses} loading={loading} />
+            </div>
+
+            {error && (
+              <Alert className="max-w-2xl mx-auto border-red-200 bg-red-50">
+                <AlertDescription className="text-red-700">{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {loading ? (
+              <LoadingSkeleton />
+            ) : courses.length > 0 ? (
+              <CourseGrid courses={courses} />
+            ) : (
+              <EmptyState
+                title="Start Your Search"
+                description="Use the search bar above to find courses on topics you're interested in"
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="bookmarked" className="space-y-8">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">My Bookmarked Courses</h2>
+              <p className="text-gray-600">Your saved courses for future learning</p>
+            </div>
+
+            {error && (
+              <Alert className="max-w-2xl mx-auto border-red-200 bg-red-50">
+                <AlertDescription className="text-red-700">{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {loading ? (
+              <LoadingSkeleton />
+            ) : userCourses.length > 0 ? (
+              <CourseGrid courses={userCourses} />
+            ) : (
+              <EmptyState
+                title="No Bookmarked Courses Yet"
+                description="Start bookmarking courses you're interested in to build your personal learning collection"
+              />
+            )}
+          </TabsContent>
+        </Tabs>
+
+        <CourseDetailModal
+          course={selectedCourse}
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          onBookmark={toggleBookmark}
+        />
       </div>
     </div>
   )
