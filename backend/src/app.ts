@@ -6,6 +6,7 @@ import { authRoutes } from "./routes/auth.routes";
 import { errorHandler } from "./middleware/error.middleware";
 import { AppDataSource } from "./data-source";
 import { aiQuizRoutes } from "./routes/ai-quiz.routes";
+import { aiChatbotRoutes } from "./routes/ai-chatbot.route";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -24,6 +25,8 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 // Routes
 app.use("/api/auth", authRoutes);
 app.use('/api/ai-quiz', aiQuizRoutes);
+app.use("/api/ai-chatbot", aiChatbotRoutes);
+
 // Error handling (must be after routes)
 app.use(errorHandler);
 
