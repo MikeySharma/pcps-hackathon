@@ -28,16 +28,19 @@ interface QuizMetadata {
   threadId?: string
 }
 
-interface CareerSuggestion {
+type CareerSuggestion = {
   title: string
   description: string
   pros: string[]
   cons: string[]
   salaryRange: string
   educationPath: string
-  jobMarket: string
+  jobMarket: "low" | "medium" | "high"
   fitScore: number
+  isGlobal: boolean
+  locationScope: string
 }
+
 
 interface ApiResponse {
   success: boolean
@@ -420,7 +423,7 @@ const BASE_URL = `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/ai-quiz`;
             <p className="text-gray-600">Based on your responses, here are personalized career matches</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
             {careerSuggestions.map((career, index) => (
               <motion.div
                 key={career.title}
@@ -428,46 +431,78 @@ const BASE_URL = `${process.env.NEXT_PUBLIC_BACKEND_BASE_URL}/api/ai-quiz`;
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
               >
-                <Card className="h-full hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
-                      <CardTitle className="text-lg">{career.title}</CardTitle>
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-medium">
-                        {career.fitScore}% Match
-                      </span>
-                    </div>
-                    <p className="text-gray-600 text-sm">{career.description}</p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-1">Pros:</h4>
-                        <ul className="text-sm text-gray-600 list-disc list-inside">
-                          {career.pros.slice(0, 2).map((pro, i) => (
-                            <li key={i}>{pro}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-1">Salary Range:</h4>
-                        <p className="text-gray-600 text-sm">{career.salaryRange}</p>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-1">Job Market:</h4>
-                        <span
-                          className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${career.jobMarket === "high"
-                              ? "bg-green-100 text-green-800"
-                              : career.jobMarket === "medium"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                        >
-                          {career.jobMarket.charAt(0).toUpperCase() + career.jobMarket.slice(1)} Demand
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+               <Card className="h-full hover:shadow-lg transition-shadow">
+  <CardHeader>
+    <div className="flex items-center justify-between mb-2">
+      <CardTitle className="text-lg">{career.title}</CardTitle>
+      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-medium">
+        {career.fitScore}% Match
+      </span>
+    </div>
+    <p className="text-gray-600 text-sm">{career.description}</p>
+  </CardHeader>
+
+  <CardContent>
+    <div className="space-y-4">
+      {/* Pros */}
+      <div>
+        <h4 className="font-medium text-gray-900 mb-1">Pros:</h4>
+        <ul className="text-sm text-gray-600 list-disc list-inside">
+          {career.pros.map((pro, i) => (
+            <li key={i}>{pro}</li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Cons */}
+      <div>
+        <h4 className="font-medium text-gray-900 mb-1">Cons:</h4>
+        <ul className="text-sm text-gray-600 list-disc list-inside">
+          {career.cons.map((con, i) => (
+            <li key={i}>{con}</li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Salary Range */}
+      <div>
+        <h4 className="font-medium text-gray-900 mb-1">Salary Range:</h4>
+        <p className="text-gray-600 text-sm">{career.salaryRange}</p>
+      </div>
+
+      {/* Education Path */}
+      <div>
+        <h4 className="font-medium text-gray-900 mb-1">Education Path:</h4>
+        <p className="text-gray-600 text-sm">{career.educationPath}</p>
+      </div>
+
+      {/* Job Market */}
+      <div>
+        <h4 className="font-medium text-gray-900 mb-1">Job Market:</h4>
+        <span
+          className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+            career.jobMarket === "high"
+              ? "bg-green-100 text-green-800"
+              : career.jobMarket === "medium"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-red-100 text-red-800"
+          }`}
+        >
+          {career.jobMarket.charAt(0).toUpperCase() + career.jobMarket.slice(1)} Demand
+        </span>
+      </div>
+
+      {/* Location Scope */}
+      <div>
+        <h4 className="font-medium text-gray-900 mb-1">Scope:</h4>
+        <p className="text-gray-600 text-sm">
+          {career.locationScope} {career.isGlobal ? "(Global Opportunity)" : ""}
+        </p>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+
               </motion.div>
             ))}
           </div>
