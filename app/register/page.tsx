@@ -14,18 +14,17 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { storage } from "@/lib/storage"
-
+import axios from "@/lib/axios"
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
-    fullName: "",
+    name: "",
     email: "",
     password: "",
-    confirmPassword: "",
     location: "",
-    userType: "",
+    role: "",
+    phoneNumber: ""
   })
   const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -37,11 +36,6 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!")
-      return
-    }
-
     if (!agreeToTerms) {
       alert("Please agree to the terms and conditions")
       return
@@ -49,22 +43,35 @@ export default function RegisterPage() {
 
     setIsLoading(true)
 
-    // Simulate registration process
-    setTimeout(() => {
-      // Store user data
-      storage.setUser({
+    try {
+      const response = await axios.post("/api/auth/register", {
         email: formData.email,
-        name: formData.fullName,
+        name: formData.name,
         location: formData.location,
-        userType: formData.userType,
+        role: formData.role,
+        password: formData.password,
+        phoneNumber: formData.phoneNumber
+      })
+
+      // Store user data locally if needed
+      storage.setUser({
+        email: response.data.email,
+        name: response.data.name,
+        location: response.data.location,
+        role: response.data.role,
         registrationTime: new Date().toISOString(),
       })
 
-      setIsLoading(false)
-      router.push("/quiz") // Redirect to quiz after registration
-    }, 2000)
+      router.push("/login")
+    } catch (error: any) {
+      console.error("Registration error:", error)
+      alert(error.response?.data?.message || "Something went wrong")
+    } finally {
+      setTimeout(() => {
+        setIsLoading(false)
+      }, 1500);
+    }
   }
-
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <motion.div
@@ -91,14 +98,14 @@ export default function RegisterPage() {
             <form onSubmit={handleRegister} className="space-y-6">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="fullName">Full Name</Label>
+                  <Label htmlFor="name">Full Name</Label>
                   <div className="relative mt-1">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
-                      id="fullName"
+                      id="name"
                       type="text"
-                      value={formData.fullName}
-                      onChange={(e) => handleInputChange("fullName", e.target.value)}
+                      value={formData.name}
+                      onChange={(e) => handleInputChange("name", e.target.value)}
                       placeholder="Enter your full name"
                       className="pl-10"
                       required
@@ -116,6 +123,21 @@ export default function RegisterPage() {
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
                       placeholder="Enter your email"
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="phoneNumber">Phone Number</Label>
+                  <div className="relative mt-1">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      id="email"
+                      type="tel"
+                      value={formData.phoneNumber}
+                      onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+                      placeholder="Enter your Phone Number"
                       className="pl-10"
                       required
                     />
@@ -139,17 +161,14 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="userType">I am a</Label>
-                  <Select value={formData.userType} onValueChange={(value) => handleInputChange("userType", value)}>
+                  <Label htmlFor="role">I am a</Label>
+                  <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value)}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Select your role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="job-seeker">Job Seeker</SelectItem>
-                      <SelectItem value="student">Student</SelectItem>
-                      <SelectItem value="career-changer">Career Changer</SelectItem>
-                      <SelectItem value="employer">Employer</SelectItem>
-                      <SelectItem value="freelancer">Freelancer</SelectItem>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -177,28 +196,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <div className="relative mt-1">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={formData.confirmPassword}
-                      onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                      placeholder="Confirm your password"
-                      className="pl-10 pr-10"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
+
               </div>
 
               <div className="flex items-start space-x-2">

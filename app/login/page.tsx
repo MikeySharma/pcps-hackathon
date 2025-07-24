@@ -13,7 +13,7 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { storage } from "@/lib/storage"
-
+import axios from "@/lib/axios"
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -26,18 +26,32 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate login process
-    setTimeout(() => {
-      // Store user data
-      storage.setUser({
+    try {
+      const response = await axios.post("/api/auth/login", {
+        email,
+        password, // Make sure you're collecting password from form too
+      })
+
+      const userData = response.data?.user || {
         email,
         name: email.split("@")[0],
+      }
+      localStorage.setItem("token", response.data.data.token)
+      localStorage.setItem("userData", JSON.stringify(userData))
+      storage.setUser({
+        ...userData,
         loginTime: new Date().toISOString(),
       })
 
-      setIsLoading(false)
-      router.push("/profile")
-    }, 1500)
+      router.push("/quiz")
+    } catch (error: any) {
+      console.error("Login failed:", error)
+      alert("Login failed. Please check your credentials.")
+    } finally {
+      setTimeout(() => {
+        setIsLoading(false)
+      }, 1500);
+    }
   }
 
   return (
