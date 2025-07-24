@@ -12,26 +12,31 @@ export default function HomePage() {
       icon: Bot,
       title: "AI Career Guidance",
       description: "Get personalized career advice from our AI assistant trained on Nepal job market",
+      href: "/chat",
     },
     {
       icon: FileText,
       title: "Resume Builder",
       description: "Create professional resumes with AI-powered suggestions and multiple templates",
+      href: "/resume",
     },
     {
       icon: HelpCircle,
       title: "Career Quiz",
       description: "Discover your ideal career path through our comprehensive assessment",
+      href: "/quiz",
     },
     {
       icon: BookOpen,
       title: "Skill Courses",
       description: "Access curated courses to build in-demand skills for the Nepali job market",
+      href: "/courses",
     },
     {
       icon: Briefcase,
       title: "Job Search",
       description: "Find local and remote opportunities tailored to your skills and preferences",
+      href: "/jobs",
     },
   ]
 
@@ -143,6 +148,7 @@ export default function HomePage() {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
               >
+                <Link href={feature.href} className="block">
                 <Card className="h-full hover:shadow-lg transition-shadow border-gray-200">
                   <CardHeader>
                     <feature.icon className="h-12 w-12 text-gray-700 mb-4" />
@@ -152,6 +158,7 @@ export default function HomePage() {
                     <CardDescription className="text-gray-600">{feature.description}</CardDescription>
                   </CardContent>
                 </Card>
+                </Link>
               </motion.div>
             ))}
           </div>
