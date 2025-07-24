@@ -164,37 +164,47 @@ export default function ChatPage() {
                   </div>
                 )}
 
-                {messages.map((message) => (
-                  <motion.div
-                    key={message.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                  >
-                    <div
-                      className={`flex space-x-2 sm:space-x-3 max-w-[85%] sm:max-w-3xl ${message.role === "user" ? "flex-row-reverse space-x-reverse" : ""
-                        }`}
+                {messages.map((message, index) => {
+                  const isEven = index % 2 === 0 // even: right side, odd: left side
+
+                  return (
+                    <motion.div
+                      key={message.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className={`flex ${isEven ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${message.role === "user" ? "bg-gray-800" : "bg-gray-200"
+                        className={`flex space-x-2 sm:space-x-3 max-w-[85%] sm:max-w-3xl ${isEven ? "flex-row-reverse space-x-reverse" : ""
                           }`}
                       >
-                        {message.role === "user" ? (
-                          <User className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
-                        ) : (
-                          <Bot className="h-3 w-3 sm:h-4 sm:w-4 text-gray-600" />
-                        )}
+                        {/* Avatar: Bot for odd, User for even */}
+                        <div
+                          className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${isEven ? "bg-blue-600" : "bg-green-500"
+                            }`}
+                        >
+                          {isEven ? (
+                            <User className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+                          ) : (
+                            <Bot className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+                          )}
+                        </div>
+
+                        {/* Message bubble */}
+                        <div
+                          className={`rounded-xl px-3 py-2 sm:px-4 sm:py-2 break-words overflow-wrap-anywhere ${isEven ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800"
+                            }`}
+                        >
+                          <div className="text-sm sm:text-base leading-relaxed">
+                            <ReactMarkdown>{message.content}</ReactMarkdown>
+                          </div>
+                        </div>
                       </div>
-                      <div
-                        className={`rounded-xl px-3 py-2 sm:px-4 sm:py-2 break-words overflow-wrap-anywhere ${message.role === "user" ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-800"
-                          }`}
-                      >
-                        <div className=" text-sm sm:text-base leading-relaxed">  <ReactMarkdown>{message.content}</ReactMarkdown></div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  )
+                })}
+
 
                 {isLoading && (
                   <div className="flex justify-start">

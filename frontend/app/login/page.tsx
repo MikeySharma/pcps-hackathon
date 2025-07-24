@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -72,6 +72,7 @@ export default function LoginPage() {
       })
 
       router.push("/quiz")
+      window.location.reload()
     } catch (error: any) {
       console.error("Login failed:", error)
       alert("Login failed. Please check your credentials.")
@@ -81,6 +82,13 @@ export default function LoginPage() {
       }, 1500);
     }
   }
+
+  useEffect(() => {
+    const CurrUser = localStorage.getItem("userData");
+    if (CurrUser) {
+      router.push("/quiz")
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
