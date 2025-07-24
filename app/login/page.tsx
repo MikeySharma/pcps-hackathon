@@ -14,6 +14,27 @@ import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { storage } from "@/lib/storage"
 import axios from "@/lib/axios"
+
+function saveLoginToResumeData(loginData: { email: string; name: string; loginTime: string }) {
+  const resumeData = {
+    personalInfo: {
+      fullName: loginData.name,
+      email: loginData.email,
+      phone: "",
+      location: "",
+      linkedin: "",
+      website: ""
+    },
+    summary: "",
+    experience: [],
+    education: [],
+    skills: [],
+    languages: []
+  }
+
+  localStorage.setItem("resumeData", JSON.stringify(resumeData))
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -38,6 +59,13 @@ export default function LoginPage() {
       }
       localStorage.setItem("token", response.data.data.token)
       localStorage.setItem("userData", JSON.stringify(userData))
+
+      saveLoginToResumeData({
+        email: userData.email,
+        name: userData.name,
+        loginTime: new Date().toISOString(),
+      })
+
       storage.setUser({
         ...userData,
         loginTime: new Date().toISOString(),
