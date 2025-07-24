@@ -5,6 +5,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 export class PdfService {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static async generateResumePdf(resumeData: any): Promise<Buffer> {
         const templatePath = path.join(__dirname, '../templates/resume.hbs');
         const templateSource = await fs.readFile(templatePath, 'utf-8');
