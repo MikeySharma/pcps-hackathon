@@ -73,9 +73,8 @@ export function SwipeCard({ job, onSwipe, isTop = false, isMobile = false }: Swi
       animate={isTop ? {} : { scale: 0.95, y: 10 }}
     >
       <Card
-        className={`h-full bg-white shadow-xl border-2 border-gray-100 overflow-hidden relative ${
-          isMobile ? "rounded-none" : ""
-        }`}
+        className={`h-full bg-white shadow-xl border-2 border-gray-100 overflow-hidden relative ${isMobile ? "rounded-none" : ""
+          }`}
       >
         {/* Color Overlays */}
         <motion.div className="absolute inset-0 bg-red-500 pointer-events-none z-10" style={{ opacity: redOverlay }} />
@@ -89,10 +88,15 @@ export function SwipeCard({ job, onSwipe, isTop = false, isMobile = false }: Swi
         />
 
         <div className={`relative ${isMobile ? "h-64" : "h-48"} bg-gradient-to-br from-gray-100 to-gray-200 z-20`}>
-          <img
-            src={job.image || "/placeholder.svg?height=200&width=400"}
-            alt={job.title}
-            className="w-full h-full object-cover"
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1000!2d72.8777!3d19.0760!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z19.0760%2C72.8777!5e0!3m2!1sen!2sin!4v1"
+            width="100%"
+            height="100%"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="w-full h-[400px] md:h-full"
+            style={{ border: 0 }}
+            allowFullScreen
           />
           <div className="absolute top-4 right-4">
             <Badge variant={job.urgent ? "destructive" : "secondary"}>{job.urgent ? "Urgent" : job.type}</Badge>
@@ -180,9 +184,8 @@ export function SwipeCard({ job, onSwipe, isTop = false, isMobile = false }: Swi
               <Button
                 variant="outline"
                 size={isMobile ? "default" : "lg"}
-                className={`rounded-full ${
-                  isMobile ? "w-12 h-12 sm:w-14 sm:h-14" : "w-14 h-14"
-                } p-0 border-red-200 hover:bg-red-50 bg-transparent`}
+                className={`rounded-full ${isMobile ? "w-12 h-12 sm:w-14 sm:h-14" : "w-14 h-14"
+                  } p-0 border-red-200 hover:bg-red-50 bg-transparent`}
                 onClick={() => handleButtonSwipe("left")}
               >
                 <X className={`${isMobile ? "h-5 w-5 sm:h-6 sm:w-6" : "h-6 w-6"} text-red-500`} />
@@ -190,9 +193,8 @@ export function SwipeCard({ job, onSwipe, isTop = false, isMobile = false }: Swi
               <Button
                 variant="outline"
                 size={isMobile ? "default" : "lg"}
-                className={`rounded-full ${
-                  isMobile ? "w-12 h-12 sm:w-14 sm:h-14" : "w-14 h-14"
-                } p-0 border-blue-200 hover:bg-blue-50 bg-transparent`}
+                className={`rounded-full ${isMobile ? "w-12 h-12 sm:w-14 sm:h-14" : "w-14 h-14"
+                  } p-0 border-blue-200 hover:bg-blue-50 bg-transparent`}
                 onClick={() => handleButtonSwipe("up")}
               >
                 <ArrowUp className={`${isMobile ? "h-5 w-5 sm:h-6 sm:w-6" : "h-6 w-6"} text-blue-500`} />
@@ -200,9 +202,8 @@ export function SwipeCard({ job, onSwipe, isTop = false, isMobile = false }: Swi
               <Button
                 variant="outline"
                 size={isMobile ? "default" : "lg"}
-                className={`rounded-full ${
-                  isMobile ? "w-12 h-12 sm:w-14 sm:h-14" : "w-14 h-14"
-                } p-0 border-green-200 hover:bg-green-50 bg-transparent`}
+                className={`rounded-full ${isMobile ? "w-12 h-12 sm:w-14 sm:h-14" : "w-14 h-14"
+                  } p-0 border-green-200 hover:bg-green-50 bg-transparent`}
                 onClick={() => handleButtonSwipe("right")}
               >
                 <Heart className={`${isMobile ? "h-5 w-5 sm:h-6 sm:w-6" : "h-6 w-6"} text-green-500`} />
@@ -215,27 +216,24 @@ export function SwipeCard({ job, onSwipe, isTop = false, isMobile = false }: Swi
         {isDragging && isTop && (
           <>
             <motion.div
-              className={`absolute top-1/2 left-4 sm:left-8 transform -translate-y-1/2 bg-red-500 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-bold ${
-                isMobile ? "text-sm sm:text-base" : "text-base"
-              } z-30`}
+              className={`absolute top-1/2 left-4 sm:left-8 transform -translate-y-1/2 bg-red-500 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-bold ${isMobile ? "text-sm sm:text-base" : "text-base"
+                } z-30`}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: x.get() < -50 ? 1 : 0, scale: x.get() < -50 ? 1 : 0.8 }}
             >
               PASS
             </motion.div>
             <motion.div
-              className={`absolute top-1/2 right-4 sm:right-8 transform -translate-y-1/2 bg-green-500 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-bold ${
-                isMobile ? "text-sm sm:text-base" : "text-base"
-              } z-30`}
+              className={`absolute top-1/2 right-4 sm:right-8 transform -translate-y-1/2 bg-green-500 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-bold ${isMobile ? "text-sm sm:text-base" : "text-base"
+                } z-30`}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: x.get() > 50 ? 1 : 0, scale: x.get() > 50 ? 1 : 0.8 }}
             >
               APPLY
             </motion.div>
             <motion.div
-              className={`absolute top-4 sm:top-8 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-bold ${
-                isMobile ? "text-sm sm:text-base" : "text-base"
-              } z-30`}
+              className={`absolute top-4 sm:top-8 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-bold ${isMobile ? "text-sm sm:text-base" : "text-base"
+                } z-30`}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: y.get() < -50 ? 1 : 0, scale: y.get() < -50 ? 1 : 0.8 }}
             >

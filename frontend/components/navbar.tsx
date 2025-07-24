@@ -17,7 +17,9 @@ export function Navbar() {
     { href: "/jobs", label: "Jobs", icon: Briefcase },
     { href: "/remotejobs", label: "Gig Jobs", icon: Zap },
     { href: "/profile", label: "Profile", icon: User },
-  ]
+  ];
+
+  const CurrUser = localStorage.getItem("userData");
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -42,7 +44,10 @@ export function Navbar() {
                 <span>{item.label}</span>
               </Link>
             ))}
-            <Button className="bg-gray-800 hover:bg-gray-700"><Link href="/register">Get Started</Link></Button>
+            {
+              !CurrUser &&
+              <Button className="bg-gray-800 hover:bg-gray-700"><Link href="/register">Get Started</Link></Button>
+            }
           </div>
 
           {/* Mobile menu button */}
