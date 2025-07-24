@@ -33,22 +33,15 @@ export const aiChatbotController = {
             if (!userId) {
                 return res.status(401).json({
                     success: false,
-                    message: 'Authentication required. Please log in to start chatting.'
+                    message: 'Authentication required'
                 });
             }
 
             const threadId = generateThreadId(userId.toString());
-            const greetingMessage = "Namaste! I'm KaamSathi, your career advisor. How can I help you today?";
-
-            // Initialize memory for this thread
-            getMemoryForThread(threadId);
+            getMemoryForThread(threadId); // Initialize memory without greeting
 
             return res.status(201).json({
                 success: true,
-                message: 'Chat started successfully',
-                data: {
-                    greeting: greetingMessage
-                },
                 metadata: {
                     threadId: threadId,
                     messageCount: 0
@@ -58,7 +51,6 @@ export const aiChatbotController = {
             return handleError(res, error, 'Failed to start chat session');
         }
     },
-
     sendMessage: async (req: Request, res: Response<ApiResponse>): Promise<Response> => {
         try {
             const userId = req.authUser?.id;
@@ -88,17 +80,19 @@ export const aiChatbotController = {
             // Get memory for this thread to check if it exists
             const memory = getMemoryForThread(threadId);
             const history = await memory.chatHistory.getMessages();
-            
+
+
             // Trim memory if needed
             await trimMemory(threadId);
 
             // Get AI response
-            const response = await getAIResponse(message, threadId);
+            const { response, suggestions } = await getAIResponse(message, threadId);
 
             return res.json({
                 success: true,
                 data: {
-                    response: response
+                    content: response,
+                    suggestions
                 },
                 metadata: {
                     threadId: threadId,
@@ -141,9 +135,9 @@ export const aiChatbotController = {
             const messages = await memory.chatHistory.getMessages();
 
             // Format messages for client
-            const formattedMessages = messages.map(msg => {
+            const formattedMessages = messages.map((msg: { _getType: () => unknown; content: unknown; }) => {
                 return {
-                    type: msg._getType(),
+                    role: msg._getType(),
                     content: msg.content,
                     timestamp: new Date().toISOString() // You might want to store actual timestamps
                 };
