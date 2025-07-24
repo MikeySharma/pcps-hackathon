@@ -333,7 +333,7 @@ export default function JobsPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: index * 0.1 }}
     >
-     {/* <Card className="hover:shadow-xl transition-all duration-300 border-0 shadow-md hover:scale-[1.02] bg-white">
+      {/* <Card className="hover:shadow-xl transition-all duration-300 border-0 shadow-md hover:scale-[1.02] bg-white">
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between">
             <div className="flex items-start space-x-4 flex-1">
@@ -429,106 +429,107 @@ export default function JobsPage() {
       </Card> */}
 
       <Card className="group bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-  <CardHeader className="p-6">
-    <div className="flex items-start justify-between gap-4">
-      <div className="flex items-start gap-4 flex-1 min-w-0">
-        <div className="w-12 h-12 bg-gray-100 rounded-md flex items-center justify-center shrink-0">
-          <Image
-            src={job.companyLogo || "/placeholder.svg"}
-            alt={`${job.company} logo`}
-            width={40}
-            height={40}
-            className="object-contain p-1"
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          <CardTitle
-            className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors cursor-pointer line-clamp-1"
-            onClick={() => fetchJobDetails(job.id)}
-          >
-            {job.title}
-          </CardTitle>
-          <CardDescription className="text-sm text-gray-600 mt-1">
-            <div className="flex flex-wrap items-center gap-3 mb-2">
-              <div className="flex items-center gap-1.5">
-                <Building className="h-3.5 w-3.5 text-gray-500" />
-                <span className="font-medium">{job.company}</span>
+        <CardHeader className="p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-4 flex-1 min-w-0">
+              <div className="w-12 h-12 bg-gray-100 rounded-md flex items-center justify-center shrink-0">
+                <Image
+                  src={job.companyLogo || "/placeholder.svg"}
+                  alt={`${job.company} logo`}
+                  width={40}
+                  height={40}
+                  className="object-contain p-1"
+                />
               </div>
-              <div className="flex items-center gap-1.5">
-                {job.isRemote ? <Globe className="h-3.5 w-3.5 text-gray-500" /> : <MapPin className="h-3.5 w-3.5 text-gray-500" />}
-                <span>{job.location}</span>
+              <div className="flex-1 min-w-0">
+                <CardTitle
+                  className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors cursor-pointer line-clamp-1"
+                  onClick={() => fetchJobDetails(job.id)}
+                >
+                  {job.title}
+                </CardTitle>
+                <CardDescription className="text-sm text-gray-600 mt-1">
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Building className="h-3.5 w-3.5 text-gray-500" />
+                      <span className="font-medium">{job.company}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {job.isRemote ? <Globe className="h-3.5 w-3.5 text-gray-500" /> : <MapPin className="h-3.5 w-3.5 text-gray-500" />}
+                      <span>{job.location}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                    <div className="flex items-center gap-1.5">
+                      <DollarSign className="h-3.5 w-3.5" />
+                      <span>{job.salary || "Not disclosed"}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5" />
+                      <span>{new Date(job.postedDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                    </div>
+                  </div>
+                </CardDescription>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-              <div className="flex items-center gap-1.5">
-                <DollarSign className="h-3.5 w-3.5" />
-                <span>{job.salary || "Not disclosed"}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5" />
-                <span>{new Date(job.postedDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
-              </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Badge
+                variant={job.isRemote ? "default" : "secondary"}
+                className={`text-xs font-medium ${job.isRemote ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}
+              >
+                {job.employmentType}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => toggleBookmark(job.id, job.isBookmarked)}
+                className="hover:bg-gray-100 rounded-full"
+                aria-label={job.isBookmarked ? "Remove bookmark" : "Add bookmark"}
+              >
+                <Heart className={`h-4 w-4 ${job.isBookmarked ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
+              </Button>
             </div>
-          </CardDescription>
-        </div>
-      </div>
-      <div className="flex items-center gap-2 shrink-0">
-        <Badge
-          variant={job.isRemote ? "default" : "secondary"}
-          className={`text-xs font-medium ${job.isRemote ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}
-        >
-          {job.employmentType}
-        </Badge>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => toggleBookmark(job.id, job.isBookmarked)}
-          className="hover:bg-gray-100 rounded-full"
-          aria-label={job.isBookmarked ? "Remove bookmark" : "Add bookmark"}
-        >
-          <Heart className={`h-4 w-4 ${job.isBookmarked ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
-        </Button>
-      </div>
-    </div>
-  </CardHeader>
-  <CardContent className="p-6 pt-0">
-    <p className="text-sm text-gray-600 line-clamp-2 mb-4">{job.shortDescription}</p>
-    <div className="flex flex-wrap gap-2 mb-4">
-      {job.skills.slice(0, 4).map((skill, i) => (
-        <Badge
-          key={i}
-          variant="outline"
-          className="text-xs bg-blue-50 text-blue-700 border-blue-200 px-2 py-0.5"
-        >
-          {skill}
-        </Badge>
-      ))}
-      {job.skills.length > 4 && (
-        <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600 border-gray-200 px-2 py-0.5">
-          +{job.skills.length - 4} more
-        </Badge>
-      )}
-    </div>
-    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => fetchJobDetails(job.id)}
-        className="text-blue-600 border-blue-200 hover:bg-blue-50 text-sm font-medium cursor-pointer"
-      >
-        View Details
-      </Button>
-      <Button
-        size="sm"
-        onClick={() => window.open(job.url, "_blank")}
-        className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium cursor-pointer"
-      >
-        <ExternalLink className="h-4 w-4 mr-1.5" />
-        Apply Now
-      </Button>
-    </div>
-  </CardContent>
-</Card>
+          </div>
+        </CardHeader>
+        <CardContent className="p-6 pt-0">
+<p className="text-sm text-gray-600 line-clamp-2 mb-4">
+  {job.shortDescription?.trim() || job.description?.slice(0, 150) + '...'}
+</p>          <div className="flex flex-wrap gap-2 mb-4">
+            {job.skills.slice(0, 4).map((skill, i) => (
+              <Badge
+                key={i}
+                variant="outline"
+                className="text-xs bg-blue-50 text-blue-700 border-blue-200 px-2 py-0.5"
+              >
+                {skill}
+              </Badge>
+            ))}
+            {job.skills.length > 4 && (
+              <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600 border-gray-200 px-2 py-0.5">
+                +{job.skills.length - 4} more
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchJobDetails(job.id)}
+              className="text-blue-600 border-blue-200 hover:bg-blue-50 text-sm font-medium cursor-pointer"
+            >
+              View Details
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => window.open(job.url, "_blank")}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium cursor-pointer"
+            >
+              <ExternalLink className="h-4 w-4 mr-1.5" />
+              Apply Now
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
 
     </motion.div>
@@ -657,7 +658,7 @@ export default function JobsPage() {
                 </p>
                 {!hasToken && <Button className="bg-blue-600 hover:bg-blue-700">Log In</Button>}              </Card>
             ) : (
-              <div className="grid grid-cols-1 lg:gridz gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {filteredJobs(bookmarkedJobs).map((job, index) => (
                   <JobCard key={job.id} job={job} index={index} />
                 ))}
