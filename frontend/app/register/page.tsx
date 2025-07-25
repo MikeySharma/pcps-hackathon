@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Bot, Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Bot, Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -18,6 +18,7 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phoneNumber: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -43,6 +44,7 @@ export default function RegisterPage() {
       const response = await axios.post("/api/auth/register", {
         email: formData.email,
         name: formData.name,
+        phoneNumber: formData.phoneNumber,
         password: formData.password,
       });
       if (!response.data.error) {
@@ -52,7 +54,7 @@ export default function RegisterPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Registration error:", error);
-      alert(error.response?.data?.message || "Something went wrong");
+      toast.error(error.response?.data?.message || "Something went wrong");
     } finally {
       setTimeout(() => {
         setIsLoading(false);
@@ -117,6 +119,24 @@ export default function RegisterPage() {
                         handleInputChange("email", e.target.value)
                       }
                       placeholder="Enter your email"
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="phoneNumber">Phone Number</Label>
+                  <div className="relative mt-1">
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      id="phoneNumber"
+                      type="tel"
+                      value={formData.phoneNumber}
+                      onChange={(e) =>
+                        handleInputChange("phoneNumber", e.target.value)
+                      }
+                      placeholder="Enter your phone number"
                       className="pl-10"
                       required
                     />
