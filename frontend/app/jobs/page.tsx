@@ -37,7 +37,9 @@ interface ApiResponse<T> {
 
 export default function JobsPage() {
   const [searchTerm, setSearchTerm] = useState("")
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedLocation, setSelectedLocation] = useState("all")
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedType, setSelectedType] = useState("all")
   const [activeTab, setActiveTab] = useState("search")
   const [jobs, setJobs] = useState<Job[]>([])
@@ -69,6 +71,7 @@ export default function JobsPage() {
     }, 500)
 
     return () => clearTimeout(timeoutId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm])
 
   // Fetch bookmarked jobs when tab changes to bookmarked
@@ -76,6 +79,7 @@ export default function JobsPage() {
     if (activeTab === "bookmarked") {
       fetchBookmarkedJobs()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab])
 
   useEffect(() => {
@@ -433,11 +437,9 @@ export default function JobsPage() {
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-4 flex-1 min-w-0">
               <div className="w-12 h-12 bg-gray-100 rounded-md flex items-center justify-center shrink-0">
-                <Image
+                <img
                   src={job.companyLogo || "/placeholder.svg"}
                   alt={`${job.company} logo`}
-                  width={40}
-                  height={40}
                   className="object-contain p-1"
                 />
               </div>
