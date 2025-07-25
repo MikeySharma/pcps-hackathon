@@ -81,7 +81,7 @@ export default function LoginPage() {
         loginTime: new Date().toISOString(),
       });
 
-      router.push("/quiz");
+      router.push("/");
       window.location.reload();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -97,7 +97,7 @@ export default function LoginPage() {
   useEffect(() => {
     const CurrUser = localStorage.getItem("token");
     if (CurrUser) {
-      router.push("/quiz");
+      router.push("/");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

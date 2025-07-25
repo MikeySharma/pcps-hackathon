@@ -5,7 +5,6 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Menu, X, Bot, User, Briefcase, BookOpen, FileText, HelpCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Zap } from "lucide-react"
 
 type User = {
   name: string,
@@ -16,24 +15,23 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
 
   const navItems = [
-    { href: "/chat", label: "AI Chat", icon: Bot },
-    { href: "/quiz", label: "Quiz", icon: HelpCircle },
+    { href: "/quiz", label: "AI Career Quiz", icon: HelpCircle },
+    { href: "/chat", label: "AI Mentor", icon: Bot },
     { href: "/resume/classic", label: "Resume", icon: FileText },
     { href: "/courses", label: "Courses", icon: BookOpen },
     { href: "/jobs", label: "Jobs", icon: Briefcase },
-    { href: "/remotejobs", label: "Gig Jobs", icon: Zap },
   ];
 
-const [currUser, setCurrUser] = useState<User | null>(null)
+  const [currUser, setCurrUser] = useState<User | null>(null)
 
   useEffect(() => {
     const userData = localStorage.getItem("userData")
     if (userData) {
       setCurrUser(JSON.parse(userData))
     }
-    }, [])
+  }, [])
 
-    const handleLogout = () => {
+  const handleLogout = () => {
     localStorage.removeItem("userData")
     setCurrUser(null)
     location.reload() // or use router.refresh() if using next/navigation
@@ -64,7 +62,7 @@ const [currUser, setCurrUser] = useState<User | null>(null)
               </Link>
             ))}
             {currUser ? (
-             <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3">
                 <Link
                   href="/profile"
                   className="text-sm text-gray-700 font-semibold hover:underline"
